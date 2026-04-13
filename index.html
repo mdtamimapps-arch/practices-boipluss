@@ -544,10 +544,130 @@
         @media (max-width: 768px) {
             .scroll-fab { display: block; }
         }
+
+        /* ---------- মোড সিলেক্টর: Android / Desktop ---------- */
+        .device-mode-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.86);
+            backdrop-filter: blur(4px);
+        }
+        .device-mode-overlay.show { display: flex; }
+        .device-mode-card {
+            width: min(520px, 95vw);
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 22px;
+            text-align: left;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+        }
+        .device-mode-card h2 { color: #ff9800; margin-bottom: 8px; font-size: 1.25rem; }
+        .device-mode-card p { color: #bbb; font-size: 0.9rem; margin-bottom: 16px; }
+        .mode-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .mode-btn {
+            border: 1px solid #444;
+            border-radius: 10px;
+            background: #171717;
+            color: #f0f0f0;
+            padding: 12px 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.92rem;
+            text-align: left;
+            transition: border-color 0.2s, transform 0.1s, background 0.2s;
+        }
+        .mode-btn strong { color: #ffcc80; display: block; margin-bottom: 4px; }
+        .mode-btn small { color: #9e9e9e; }
+        .mode-btn:hover { border-color: #ff9800; background: #1d1d1d; }
+        .mode-btn:active { transform: scale(0.98); }
+        .mode-switch-open {
+            position: fixed;
+            left: max(12px, env(safe-area-inset-left, 0px));
+            bottom: max(16px, env(safe-area-inset-bottom, 0px));
+            z-index: 1490;
+            border: 1px solid #3a3a3a;
+            border-radius: 999px;
+            background: rgba(10, 10, 10, 0.92);
+            color: #ddd;
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+        .mode-switch-open:hover { border-color: #ff9800; color: #ff9800; }
+
+        /* Android mode: হেডার কম্প্যাক্ট, কনটেন্ট ফোকাস */
+        body.mode-android .top-scroll-strip {
+            display: none;
+        }
+        body.mode-android .utility-bar {
+            grid-template-columns: 1fr auto;
+            font-size: 0.7rem;
+            padding: 5px 2.5%;
+            gap: 4px;
+        }
+        body.mode-android .utility-bar .bismillah {
+            display: none;
+        }
+        body.mode-android header {
+            padding: 8px 2.5%;
+        }
+        body.mode-android .header-main {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 8px 2.5%;
+        }
+        body.mode-android .search-wrap.wide .search-input,
+        body.mode-android .search-wrap.elec .search-input {
+            width: 100%;
+            max-width: none;
+            min-height: 42px;
+        }
+        body.mode-android .app-cta {
+            display: none !important;
+        }
+        body.mode-android .header-sub {
+            padding: 6px 2.5% 8px;
+            gap: 8px;
+        }
+        body.mode-android #main-website > section[id],
+        body.mode-android #main-website .product-section[id] {
+            scroll-margin-top: 84px;
+        }
+        @media (max-width: 640px) {
+            .mode-options { grid-template-columns: 1fr; }
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div id="deviceModeOverlay" class="device-mode-overlay" role="dialog" aria-modal="true" aria-labelledby="deviceModeTitle">
+        <div class="device-mode-card">
+            <h2 id="deviceModeTitle">শুরু করার আগে mode বাছাই করুন</h2>
+            <p>আপনার ডিভাইস অনুযায়ী ভিউ সেট হবে। পরে নিচের <strong style="color:#ff9800;">Change Mode</strong> বাটন থেকে বদলাতে পারবেন।</p>
+            <div class="mode-options">
+                <button type="button" class="mode-btn" data-mode="android">
+                    <strong>Android User</strong>
+                    <small>Compact header + full-screen friendly content view</small>
+                </button>
+                <button type="button" class="mode-btn" data-mode="desktop">
+                    <strong>Desktop User</strong>
+                    <small>Current full layout (আগের মতোই)</small>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" id="openModeSelector" class="mode-switch-open" aria-label="View mode বদলান">Change Mode</button>
 
     <!-- উপরের কেয়ার/ডোনেশন: স্টিকি নয়—স্ক্রল করলে উঠে যাবে, মোবাইলে বই দেখার জায়গা বাড়বে -->
     <div class="top-scroll-strip">
@@ -689,6 +809,7 @@
                 <a href="#books" class="view-all">View All →</a>
             </div>
             <div class="horizontal-scroll" id="weekly-scroll">
+    <!-- HINT: Weekly row-তে বই যোগ করতে populateWeeklyRow() ফাংশনের items array-তে নতুন ["বই নাম","লেখক"] দিন -->
     <div class="product-card" data-search="প্রোগ্রামিংয়ের চৌদ্দগোষ্ঠী ঝংকার মাহবুব">
         <div class="product-img">
             <img src="https://scontent.fdac190-1.fna.fbcdn.net/v/t39.30808-6/612608679_122182720874381463_2758780002660335582_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=107&ccb=1-7&_nc_sid=2a1932&_nc_eui2=AeGEKdmZu59w4k3a1_SI6tVaJzyOZyt8kXwnPI5nK3yRfPZAEwnmWl4BP6h5WhKi2ABZcY-zHE7vYlvwybeU6EVv&_nc_ohc=tDTmb9nTVl0Q7kNvwF7FvLa&_nc_oc=AdoDZUtQ9XSTqOdIIePbZz6fI936x7Q6rVwsgMl5WxVpVjucawnUnFDdaTrxtC1xJj8&_nc_zt=23&_nc_ht=scontent.fdac190-1.fna&_nc_gid=9w01qLXFAjrVJbx0nI7bBQ&_nc_ss=7a3a8&oh=00_Af1t4kQ_bemTWLWmP1x52AEk1NQgIV6hrtWWv7QH3aEiHQ&oe=69D5AC35" alt="Book">
@@ -754,6 +875,7 @@
             <h2 class="section-title">আমাদের সংগ্রহ 📚</h2>
             <p class="books-lead">Recently sold book products — উপরের সার্চ দিয়ে ফিল্টার করুন।</p>
             <!-- নতুন বই: এই গ্রিডের ভেতর একটা সম্পূর্ণ product-card ব্লক কপি করে বসান। data-search এ বইনাম+লেখক (সার্চ মিলবে)। ছবি = img src -->
+            <!-- HINT: মূল বই সেকশনে বই যোগ করার সবচেয়ে সহজ জায়গা = নিচের #product-grid-main -->
             <div class="product-grid" id="product-grid-main">
 
                 <div class="product-card" data-search="প্যারাডক্সিক্যাল সাজিদ আরিফ আজাদ">
@@ -951,6 +1073,7 @@
 
     <script>
         const NOTICE_STORAGE_KEY = "boiPlusInternalNotices";
+        const VIEW_MODE_KEY = "boiPlusViewMode";
         const DEFAULT_NOTICES = [
             { id: "def-1", title: "মিটিং", body: "মিটিং রাত ৯ টায়।", isDefault: true },
             { id: "def-2", title: "চাঁদা", body: "সাপ্তাহিক চাঁদা জমা দিন।", isDefault: true },
@@ -971,6 +1094,39 @@
         const modal = document.getElementById("loginModal");
         const mainWeb = document.getElementById("main-website");
         const dashBoard = document.getElementById("admin-dashboard");
+        const modeOverlay = document.getElementById("deviceModeOverlay");
+        const modeOpenBtn = document.getElementById("openModeSelector");
+
+        function setViewMode(mode) {
+            const normalized = mode === "android" ? "android" : "desktop";
+            document.body.classList.remove("mode-android", "mode-desktop");
+            document.body.classList.add("mode-" + normalized);
+            localStorage.setItem(VIEW_MODE_KEY, normalized);
+            if (modeOverlay) modeOverlay.classList.remove("show");
+        }
+
+        function openViewModeSelector() {
+            if (modeOverlay) modeOverlay.classList.add("show");
+        }
+
+        function initViewMode() {
+            const saved = localStorage.getItem(VIEW_MODE_KEY);
+            if (saved === "android" || saved === "desktop") {
+                setViewMode(saved);
+            } else {
+                openViewModeSelector();
+            }
+            if (modeOverlay) {
+                modeOverlay.querySelectorAll("[data-mode]").forEach(function (btn) {
+                    btn.addEventListener("click", function () {
+                        setViewMode(this.getAttribute("data-mode"));
+                    });
+                });
+            }
+            if (modeOpenBtn) {
+                modeOpenBtn.addEventListener("click", openViewModeSelector);
+            }
+        }
 
         function loadNoticesFromStorage() {
             try {
@@ -1217,6 +1373,7 @@
         function populateWeeklyRow() {
             const row = document.getElementById("weekly-scroll");
             if (!row) return;
+            // HINT: Weekly বই যোগ করতে এই items array-তে নতুন ["বই নাম", "লেখক"] লাইন যোগ করুন।
             const items = [
                 ["প্যারাডক্সিক্যাল সাজিদ", "আরিফ আজাদ"],
                 ["হিমুর হাতে কয়েকটি নীলপদ্ম", "হুমায়ূন আহমেদ"],
@@ -1225,6 +1382,7 @@
             row.innerHTML = items.map(function (x) { return buildMiniCard(x[0], x[1]); }).join("");
         }
 
+        // HINT: নতুন ক্যাটাগরি রো যোগ করতে নিচে নতুন object দিন: { title: "ক্যাটাগরি নাম", slug: "unique-slug" }
         const CATEGORY_ROW_DEFS = [
             { title: "ইসলামি বই", slug: "islam" },
             { title: "উপন্যাস", slug: "novel" },
@@ -1245,6 +1403,7 @@
             if (!host) return;
             host.innerHTML = CATEGORY_ROW_DEFS.map(function (def) {
                 const sid = def.sectionId ? def.sectionId : "cat-row-" + def.slug;
+                // HINT: প্রতিটি ক্যাটাগরির বই কার্ড বদলাতে buildMiniCard(...) লাইনে আপনার বই নাম/লেখক বসান।
                 return (
                     '<section class="browse-section" id="' + sid + '">' +
                     '<div class="browse-head"><h3>' + def.title + '</h3><a href="#books" class="view-all">View All →</a></div>' +
@@ -1268,6 +1427,7 @@
             });
         });
 
+        initViewMode();
         renderCategoryCloud();
         populateWeeklyRow();
         populateCategoryRows();
