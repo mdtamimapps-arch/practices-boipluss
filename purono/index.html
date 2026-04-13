@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>বই প্লাস | আমাদের টিম</title>
+    <style>
+        html { scroll-behavior: smooth; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hind Siliguri', sans-serif; }
+        body { background-color: #0d0d0d; color: #e0e0e0; line-height: 1.6; }
+
+        /* সবার উপরে: সময়, বিসমিল্লাহ, তারিখ */
+        .sticky-top-cluster {
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+            padding-top: env(safe-area-inset-top, 0px);
+        }
+        .utility-bar {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 4%;
+            background: linear-gradient(90deg, #0a0a0a 0%, #141414 50%, #0a0a0a 100%);
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 0.85rem;
+        }
+        #live-time {
+            justify-self: start;
+            color: #ff9800;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        .bismillah {
+            justify-self: center;
+            text-align: center;
+            color: #c8e6c9;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            padding: 0 6px;
+        }
+        #live-date-bn {
+            justify-self: end;
+            text-align: right;
+            color: #9ccc65;
+            white-space: nowrap;
+        }
+        @media (max-width: 720px) {
+            .utility-bar {
+                grid-template-columns: 1fr;
+                justify-items: center;
+                text-align: center;
+            }
+            #live-time, #live-date-bn { justify-self: center; text-align: center; }
+            .bismillah { font-size: 0.8rem; line-height: 1.35; }
+        }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 16px 5%;
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #333;
+        }
+        .logo-wrap {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: inherit;
+        }
+        /* লোগো: src এ আপনার ইমেজের লিংক বসান; খালি রাখলে শুধু টেক্সট দেখাবে */
+        .site-logo {
+            width: 44px; height: 44px;
+            object-fit: contain;
+            border-radius: 8px;
+            display: none;
+            border: 1px solid #333;
+        }
+        .site-logo[src]:not([src=""]) { display: block; }
+        .logo-text { font-size: 22px; font-weight: bold; color: #ff9800; }
+
+        .header-actions {
+            display: flex; align-items: center; flex-wrap: wrap;
+            gap: 12px; margin-left: auto;
+        }
+        .search-wrap { position: relative; }
+        .search-input {
+            width: min(220px, 42vw);
+            padding: 9px 12px 9px 36px;
+            background: #0d0d0d;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+        }
+        .search-input::placeholder { color: #666; }
+        .search-wrap::before {
+            content: "⌕";
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 16px;
+            pointer-events: none;
+        }
+        .nav-links { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 0; }
+        .nav-links a { color: #e0e0e0; text-decoration: none; margin-left: 16px; font-size: 15px; transition: 0.3s; }
+        .nav-links a:hover { color: #ff9800; }
+        .admin-login-btn {
+            cursor: pointer; color: #aaa; font-size: 14px; margin-left: 16px;
+            border: 1px solid #aaa; padding: 6px 12px; border-radius: 5px; transition: 0.3s;
+            background: transparent;
+        }
+        .admin-login-btn:hover { color: #ff9800; border-color: #ff9800; }
+
+        /* কেয়ার/ডোনেশন: পেজের একদম উপর, স্টিকি নয় */
+        .top-scroll-strip {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* কাস্টমার কেয়ার / ডোনেশন স্ট্রিপ */
+        .care-strip {
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
+            padding: 8px 5%; background: #0a0a0a; border-bottom: 1px solid #252525; font-size: 0.82rem;
+        }
+        .care-strip a { color: #ff9800; text-decoration: none; }
+        .care-strip a:hover { text-decoration: underline; }
+        .care-hotline { color: #e0e0e0; }
+        .care-hotline strong { color: #ff9800; }
+        .donation-strip {
+            padding: 6px 5%; background: linear-gradient(90deg, rgba(255,152,0,0.08), transparent);
+            border-bottom: 1px solid #222; font-size: 0.8rem; color: #aaa;
+        }
+        .donation-strip a { color: #81c784; font-weight: 600; text-decoration: none; }
+        .donation-strip a:hover { color: #ff9800; }
+
+        .header-main {
+            display: grid; grid-template-columns: auto 1fr 1fr auto; align-items: center; gap: 14px;
+            padding: 14px 5%; width: 100%;
+        }
+        @media (max-width: 960px) {
+            .header-main { grid-template-columns: 1fr; }
+        }
+        .search-wrap.wide .search-input { width: min(100%, 360px); }
+        .search-wrap.elec .search-input { width: min(100%, 320px); border-color: #3d5a80; }
+        .search-wrap.elec::before { content: "⚡"; }
+        .app-cta {
+            display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+            padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid #333;
+        }
+        .app-cta img { height: 40px; width: auto; display: block; }
+        .app-cta .app-text { font-size: 0.75rem; color: #888; line-height: 1.3; }
+        .app-cta .app-text strong { color: #fff; display: block; font-size: 0.9rem; }
+
+        .header-sub {
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+            padding: 10px 5% 14px; border-top: 1px solid #2a2a2a; width: 100%;
+        }
+        .user-row { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; font-size: 0.9rem; }
+        .user-row a { color: #ccc; text-decoration: none; }
+        .user-row a:hover { color: #ff9800; }
+        .cart-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid #444; border-radius: 8px; }
+        .cart-link:hover { border-color: #ff9800; color: #ff9800; }
+
+        .main-nav {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 6px 4px;
+        }
+        .main-nav a {
+            color: #ddd; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-size: 0.92rem;
+            transition: background 0.2s, color 0.2s;
+        }
+        .main-nav a:hover { background: rgba(255,152,0,0.12); color: #ff9800; }
+
+        .promo-row {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;
+            max-width: 1200px; margin: 0 auto 24px; padding: 0 5%;
+        }
+        .promo-card {
+            background: linear-gradient(145deg, #1e1e1e, #141414); border: 1px solid #333; border-radius: 14px;
+            padding: 16px 18px; text-align: left; transition: transform 0.25s, border-color 0.25s;
+        }
+        .promo-card:hover { transform: translateY(-4px); border-color: #ff9800; }
+        .promo-card h4 { color: #ff9800; font-size: 1rem; margin-bottom: 6px; }
+        .promo-card p { color: #999; font-size: 0.85rem; }
+
+        .pill-row {
+            display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 1100px; margin: 0 auto 28px;
+            padding: 0 5%;
+        }
+        .pill {
+            display: inline-block; padding: 8px 14px; border-radius: 999px; background: rgba(255,255,255,0.06);
+            border: 1px solid #333; color: #ccc; font-size: 0.85rem; text-decoration: none; transition: 0.2s;
+        }
+        .pill:hover { border-color: #ff9800; color: #ff9800; }
+
+        .toolbar-row {
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+            max-width: 1200px; margin: 0 auto 20px; padding: 0 5%;
+        }
+        .toolbar-row label { color: #888; font-size: 0.85rem; margin-right: 8px; }
+        .toolbar-row select {
+            background: #1a1a1a; color: #e0e0e0; border: 1px solid #444; border-radius: 8px; padding: 8px 12px; font-family: inherit;
+        }
+        .filter-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .chip { padding: 6px 12px; border-radius: 8px; background: #1a1a1a; border: 1px solid #333; font-size: 0.8rem; color: #aaa; cursor: default; }
+
+        .categories-panel {
+            max-width: 1200px; margin: 0 auto 40px; padding: 24px 5%; background: #0f0f0f; border: 1px solid #252525; border-radius: 16px;
+        }
+        .categories-panel h3 { color: #ff9800; margin-bottom: 16px; font-size: 1.15rem; }
+        .cat-cloud {
+            display: flex; flex-wrap: wrap; gap: 8px; max-height: 220px; overflow: hidden; position: relative;
+            transition: max-height 0.4s ease;
+        }
+        .cat-cloud.expanded { max-height: none; }
+        .cat-cloud .pill { cursor: pointer; border-style: dashed; }
+        .cat-toggle {
+            margin-top: 14px; background: transparent; border: 1px solid #ff9800; color: #ff9800;
+            padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 0.9rem;
+        }
+        .cat-toggle:hover { background: rgba(255,152,0,0.1); }
+
+        .browse-section {
+            max-width: 1200px; margin: 0 auto 48px; padding: 0 5%;
+        }
+        .browse-head {
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
+        }
+        .browse-head h3 { color: #fff; font-size: 1.25rem; }
+        .view-all { color: #ff9800; text-decoration: none; font-size: 0.9rem; }
+        .view-all:hover { text-decoration: underline; }
+        .horizontal-scroll {
+            display: flex; gap: 16px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory;
+        }
+        .horizontal-scroll .product-card { min-width: 200px; flex-shrink: 0; scroll-snap-align: start; }
+        .mini-book-card {
+            min-width: 180px !important;
+            border-radius: 14px;
+            border: 1px solid rgba(106, 120, 255, 0.45);
+            background:
+                linear-gradient(145deg, rgba(18, 18, 18, 0.95), rgba(28, 28, 28, 0.95)),
+                linear-gradient(125deg, rgba(255, 94, 98, 0.14), rgba(94, 114, 255, 0.18), rgba(59, 224, 195, 0.15));
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+            transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+            overflow: hidden;
+        }
+        .mini-book-card:hover {
+            transform: translateY(-7px);
+            border-color: rgba(59, 224, 195, 0.75);
+            box-shadow: 0 12px 28px rgba(94, 114, 255, 0.28);
+        }
+        .mini-book-card .mini-cover {
+            height: 145px;
+            background:
+                radial-gradient(circle at 22% 20%, rgba(255, 94, 98, 0.25), transparent 45%),
+                radial-gradient(circle at 78% 25%, rgba(94, 114, 255, 0.28), transparent 50%),
+                linear-gradient(160deg, #242424, #151515);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d6d6d6;
+            font-size: 2.05rem;
+            border-bottom: 1px solid rgba(120, 120, 120, 0.26);
+        }
+        .mini-book-card .mini-meta {
+            padding: 11px 12px 13px;
+            text-align: left;
+        }
+        .mini-book-card .mini-meta h4 {
+            font-size: 14px;
+            color: #f8f8f8;
+            margin-bottom: 4px;
+            line-height: 1.35;
+        }
+        .mini-book-card .mini-meta p {
+            margin: 0;
+            color: #9f9f9f;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .electronics-section { padding: 40px 5%; background: linear-gradient(180deg, #0a1628 0%, #0d0d0d 100%); border-top: 1px solid #1e3a5f; }
+        .electronics-section .section-title { margin-bottom: 20px; }
+        .elec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; max-width: 1200px; margin: 0 auto; }
+        .elec-card {
+            background: #121c2c; border: 1px solid #2a3f5f; border-radius: 12px; padding: 16px; text-align: center;
+            transition: 0.25s;
+        }
+        .elec-card:hover { border-color: #64b5f6; box-shadow: 0 8px 24px rgba(100,181,246,0.12); }
+        .elec-card .elec-icon { font-size: 2rem; margin-bottom: 8px; }
+        .elec-card h4 { color: #90caf9; font-size: 0.95rem; margin-bottom: 6px; }
+        .elec-card p { color: #789; font-size: 0.8rem; }
+
+        .footer-mega { background: #080808; border-top: 1px solid #222; padding: 48px 5% 24px; text-align: left; }
+        .footer-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 28px;
+            max-width: 1200px; margin: 0 auto 32px;
+        }
+        .footer-col h4 { color: #ff9800; font-size: 0.95rem; margin-bottom: 14px; }
+        .footer-col ul { list-style: none; }
+        .footer-col li { margin-bottom: 8px; }
+        .footer-col a { color: #888; text-decoration: none; font-size: 0.88rem; }
+        .footer-col a:hover { color: #ff9800; }
+        .footer-about { max-width: 1200px; margin: 0 auto; padding-top: 24px; border-top: 1px solid #1a1a1a; color: #666; font-size: 0.82rem; line-height: 1.7; }
+        .social-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+        .social-row a {
+            display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px;
+            border-radius: 8px; background: #1a1a1a; border: 1px solid #333; color: #aaa; text-decoration: none; font-size: 0.85rem;
+        }
+        .social-row a:hover { border-color: #ff9800; color: #ff9800; }
+
+        .hero { min-height: 60vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, #121212 0%, #1e1e1e 100%); padding: 36px 20px 28px; }
+        .hero h1 { font-size: 3rem; color: #ff9800; margin-bottom: 10px; }
+        .hero h2 { font-size: 1.5rem; margin-bottom: 15px; }
+        .hero h3 { font-size: 1.1rem; color: #bbb; max-width: 600px; }
+
+        .team-section { padding: 80px 5%; text-align: center; }
+        .section-title { font-size: 2.5rem; color: #ff9800; margin-bottom: 40px; text-transform: uppercase; }
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; max-width: 1200px; margin: 0 auto; }
+        .member-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 25px; transition: all 0.4s ease; text-align: center; }
+        .member-card:hover { transform: translateY(-10px); border-color: #ff9800; box-shadow: 0 10px 30px rgba(255, 152, 0, 0.2); }
+        .member-card h3 { color: #ff9800; font-size: 20px; }
+
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.9); backdrop-filter: blur(5px); }
+        .modal-content { background-color: #1a1a1a; margin: 10% auto; padding: 30px; border: 1px solid #333; border-radius: 15px; width: 90%; max-width: 400px; max-height: min(90vh, 520px); overflow-y: auto; text-align: center; box-shadow: 0 0 20px rgba(255, 152, 0, 0.3); }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .login-input { width: 100%; padding: 12px; margin: 10px 0; background: #0d0d0d; border: 1px solid #444; color: #fff; border-radius: 8px; }
+        .login-submit { width: 100%; padding: 12px; background: #ff9800; color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+
+        #admin-dashboard { display: none; padding: 50px 8%; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; flex-wrap: wrap; gap: 16px; }
+        .logout-btn { background: #ea4335; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; }
+
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+        .dash-card { background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; border-left: 4px solid #ff9800; }
+        .dash-card h3 { color: #ff9800; margin-bottom: 15px; }
+
+        .admin-info-list { text-align: left; list-style: none; }
+        .admin-info-list li { background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #222; }
+        .admin-info-list b { color: #ff9800; }
+        .info-tag { font-size: 13px; color: #888; display: block; margin-top: 5px; }
+
+        /* নোটিশ সিস্টেম */
+        .notice-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; text-align: left; }
+        .notice-form input, .notice-form textarea {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #444;
+            background: #111; color: #e0e0e0; font-family: inherit; font-size: 14px;
+        }
+        .notice-form textarea { min-height: 72px; resize: vertical; }
+        .notice-add-btn {
+            padding: 10px 16px; background: #ff9800; color: #000; font-weight: bold;
+            border: none; border-radius: 8px; cursor: pointer;
+        }
+        .notice-item {
+            background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: 10px;
+            margin-bottom: 10px; border: 1px solid #2a2a2a; text-align: left;
+            display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+        }
+        .notice-item-body strong { color: #ffcc80; display: block; margin-bottom: 6px; }
+        .notice-item-body span { color: #bbb; font-size: 14px; white-space: pre-wrap; }
+        .notice-del {
+            flex-shrink: 0; background: #442222; color: #ffab91; border: 1px solid #633;
+            padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;
+        }
+        .notice-del:hover { background: #5c2222; }
+
+        .notice-editor-wrap[hidden], .notice-lock-msg[hidden] { display: none !important; }
+        .notice-lock-msg {
+            padding: 14px 16px; margin-bottom: 18px; text-align: left;
+            background: rgba(255, 152, 0, 0.08); border: 1px dashed rgba(255, 152, 0, 0.45);
+            border-radius: 12px; color: #ffcc80; font-size: 14px; line-height: 1.5;
+        }
+        .notice-intro { color: #9e9e9e; font-size: 14px; margin-bottom: 14px; line-height: 1.5; }
+
+        .meet-btn { display: inline-block; background: #25D366; color: #000; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; margin-top: 15px; }
+
+        footer { margin-top: 50px; padding: 30px; text-align: center; background: #111; color: #666; border-top: 1px solid #222; }
+
+        .product-section { padding: 80px 8%; text-align: center; background: #0a0a0a; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; }
+        .product-card { background: #1a1a1a; border-radius: 15px; overflow: hidden; border: 1px solid #333; transition: 0.3s; position: relative; }
+        .product-card:hover { transform: translateY(-10px); border-color: #ff9800; box-shadow: 0 10px 25px rgba(255, 152, 0, 0.1); }
+        .product-card.hidden-search { display: none; }
+        .product-img { height: 280px; background: #222; position: relative; overflow: hidden; }
+        .product-img img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+        .product-card:hover .product-img img { transform: scale(1.1); }
+        .discount-tag { position: absolute; top: 10px; left: 10px; background: #ff9800; color: #000; padding: 2px 8px; font-size: 12px; font-weight: bold; border-radius: 5px; }
+        .product-info { padding: 15px; text-align: left; }
+        .product-info h4 { color: #fff; font-size: 18px; margin-bottom: 5px; }
+        .author { color: #888; font-size: 14px; margin-bottom: 10px; }
+        .price-box { margin-bottom: 15px; }
+        .current-price { color: #ff9800; font-size: 20px; font-weight: bold; }
+        .old-price { color: #666; font-size: 14px; text-decoration: line-through; margin-left: 10px; }
+        .buy-btn { width: 100%; padding: 10px; background: transparent; border: 1px solid #ff9800; color: #ff9800; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .buy-btn:hover { background: #ff9800; color: #000; }
+
+        /* ---------- মোবাইল / অ্যান্ড্রয়েড ফ্রেন্ডলি ---------- */
+        #main-website {
+            position: relative;
+            z-index: 1;
+            overflow-x: hidden;
+        }
+        .books-lead {
+            color: #888;
+            margin: -24px auto 28px;
+            max-width: 560px;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                overflow-x: hidden;
+                -webkit-text-size-adjust: 100%;
+            }
+            .sticky-top-cluster {
+                /* খুব লম্বা স্টিকি হেডার মোবাইলে নিচের কনটেন্ট ঢেকে ফেলে না—ফন্ট/প্যাডিং কম */
+                box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+            }
+            .utility-bar {
+                padding: 6px 3%;
+                font-size: 0.72rem;
+                gap: 4px;
+            }
+            .bismillah { font-size: 0.72rem !important; line-height: 1.3; padding: 0 4px; }
+            #live-time, #live-date-bn { font-size: 0.7rem; }
+            .care-strip {
+                padding: 6px 3%;
+                font-size: 0.75rem;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .donation-strip { padding: 5px 3%; font-size: 0.72rem; }
+
+            header {
+                padding: 10px 3%;
+            }
+            .header-main {
+                gap: 10px;
+                padding: 10px 3%;
+            }
+            .logo-text { font-size: 1.05rem !important; }
+            .site-logo { width: 40px !important; height: 40px !important; }
+            .search-wrap.wide .search-input,
+            .search-wrap.elec .search-input {
+                width: 100%;
+                max-width: none;
+                font-size: 15px; /* iOS জুম কমাতে ১৬pxের কাছাকাছি */
+                min-height: 44px;
+            }
+            .header-sub {
+                padding: 8px 3% 10px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .user-row { justify-content: center; }
+            /* গুগল প্লে ব্লক লুকিয়ে স্টিকি হেডার খাটো—বই দেখা যাবে */
+            .app-cta { display: none !important; }
+            /* ন্যাভ এক লাইনে বাম→ডান স্ক্রল */
+            .main-nav {
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                max-width: 100%;
+                padding: 4px 0 8px;
+                gap: 0;
+            }
+            .main-nav a {
+                flex: 0 0 auto;
+                white-space: nowrap;
+                padding: 8px 10px;
+                font-size: 0.85rem;
+            }
+            .nav-links { justify-content: center; width: 100%; }
+            .admin-login-btn { margin-left: 0; }
+
+            .hero {
+                min-height: auto;
+                padding: 24px 16px 20px;
+            }
+            .hero h1 { font-size: clamp(1.35rem, 5.5vw, 1.85rem); margin-bottom: 8px; }
+            .hero h2 { font-size: 1.05rem; margin-bottom: 10px; }
+            .hero h3 { font-size: 0.88rem; max-width: 100%; padding: 0 4px; }
+
+            #track-order, #donation {
+                padding-left: 3% !important;
+                padding-right: 3% !important;
+                font-size: 0.8rem !important;
+                scroll-margin-top: 92px !important;
+            }
+            /* ন্যাভ/পিল থেকে #books ইত্যাদিতে লাফ—শিরোনাম স্টিকি হেডারের নিচে যাবে না */
+            #main-website > section[id],
+            #main-website .product-section[id] {
+                scroll-margin-top: 92px;
+            }
+
+            .promo-row { padding: 0 3%; margin-bottom: 16px; gap: 8px; }
+            .promo-card { padding: 12px 14px; }
+            .pill-row { padding: 0 3%; margin-bottom: 20px; }
+            .toolbar-row { padding: 0 3%; margin-bottom: 14px; }
+            .categories-panel { padding: 16px 3%; margin-bottom: 28px; }
+            .cat-cloud { max-height: 160px; }
+            .cat-cloud.expanded { max-height: none; }
+            .browse-section { padding: 0 3%; margin-bottom: 32px; }
+            .browse-head h3 { font-size: 1.05rem; }
+            .horizontal-scroll {
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+                padding-bottom: 12px;
+            }
+
+            .electronics-section { padding: 28px 3%; }
+            .elec-grid { gap: 12px; }
+
+            .product-section {
+                padding: 36px 3% 48px;
+            }
+            .section-title {
+                font-size: 1.45rem;
+                margin-bottom: 16px;
+                line-height: 1.25;
+            }
+            /* নেগেটিভ মার্জিন মোবাইলে বই সেকশন উপরের ব্লকের নিচে চলে যায়—সরিয়ে দিলাম */
+            .books-lead {
+                margin: 8px auto 20px !important;
+            }
+            .product-grid {
+                grid-template-columns: 1fr;
+                gap: 18px;
+            }
+            .product-img { height: 240px; }
+
+            .team-section { padding: 48px 3%; }
+            .member-card { padding: 18px; }
+
+            .footer-mega { padding: 32px 3% 20px; }
+            .footer-grid { gap: 20px; }
+
+            #admin-dashboard { padding: 24px 4%; }
+            .dash-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 380px) {
+            .app-cta .app-text strong { font-size: 0.8rem; }
+        }
+
+        /* ফ্লোটিং স্ক্রল বাটন (অ্যান্ড্রয়েড/মোবাইল)—উপরে / নিচে */
+        .scroll-fab {
+            display: none;
+            position: fixed;
+            right: max(12px, env(safe-area-inset-right, 0px));
+            bottom: max(16px, env(safe-area-inset-bottom, 0px));
+            z-index: 1500;
+        }
+        .scroll-fab-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.5));
+        }
+        .scroll-fab-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #ff9800;
+            background: rgba(18, 18, 18, 0.96);
+            color: #ff9800;
+            font-size: 1.35rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            transition: transform 0.12s ease, background 0.15s ease;
+        }
+        .scroll-fab-btn:active {
+            transform: scale(0.92);
+            background: rgba(255, 152, 0, 0.18);
+        }
+        @media (max-width: 768px) {
+            .scroll-fab { display: block; }
+        }
+
+        :root {
+            --rgb-premium-1: rgb(255, 94, 98);
+            --rgb-premium-2: rgb(94, 114, 255);
+            --rgb-premium-3: rgb(59, 224, 195);
+            --rgb-panel: linear-gradient(135deg, rgba(255, 94, 98, 0.2), rgba(94, 114, 255, 0.2), rgba(59, 224, 195, 0.18));
+            --rgb-border: rgba(120, 150, 255, 0.45);
+            --rgb-glow: 0 10px 28px rgba(94, 114, 255, 0.22);
+        }
+
+        /* ---------- মোড সিলেক্টর: Android / Desktop ---------- */
+        .device-mode-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 94, 98, 0.22), transparent 48%),
+                radial-gradient(circle at 80% 25%, rgba(94, 114, 255, 0.28), transparent 52%),
+                radial-gradient(circle at 55% 78%, rgba(59, 224, 195, 0.2), transparent 48%),
+                rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(8px);
+        }
+        .device-mode-overlay.show { display: flex; }
+        .device-mode-card {
+            width: min(520px, 95vw);
+            background:
+                linear-gradient(145deg, rgba(10, 10, 10, 0.94), rgba(25, 25, 25, 0.94)),
+                var(--rgb-panel);
+            border: 1px solid var(--rgb-border);
+            border-radius: 16px;
+            padding: 22px;
+            text-align: left;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45), var(--rgb-glow);
+        }
+        .device-mode-card h2 {
+            margin-bottom: 8px;
+            font-size: 1.25rem;
+            background: linear-gradient(90deg, var(--rgb-premium-1), var(--rgb-premium-2), var(--rgb-premium-3));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .device-mode-card p { color: #bbb; font-size: 0.9rem; margin-bottom: 16px; }
+        .mode-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .mode-btn {
+            border: 1px solid rgba(130, 130, 130, 0.4);
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(94, 114, 255, 0.12));
+            color: #f0f0f0;
+            padding: 12px 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.92rem;
+            text-align: left;
+            transition: border-color 0.2s, transform 0.1s, background 0.2s, box-shadow 0.2s;
+        }
+        .mode-btn strong { color: #ffe0b2; display: block; margin-bottom: 4px; }
+        .mode-btn small { color: #9e9e9e; }
+        .mode-btn:hover {
+            border-color: rgba(59, 224, 195, 0.7);
+            background: linear-gradient(135deg, rgba(255, 94, 98, 0.2), rgba(94, 114, 255, 0.22));
+            box-shadow: 0 8px 22px rgba(94, 114, 255, 0.25);
+        }
+        .mode-btn:active { transform: scale(0.98); }
+        .mode-switch-open {
+            position: fixed;
+            left: max(12px, env(safe-area-inset-left, 0px));
+            bottom: max(16px, env(safe-area-inset-bottom, 0px));
+            z-index: 1490;
+            border: 1px solid rgba(120, 150, 255, 0.55);
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(255, 94, 98, 0.18), rgba(94, 114, 255, 0.26), rgba(10, 10, 10, 0.95));
+            color: #f3f3f3;
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(94, 114, 255, 0.28);
+        }
+        .mode-switch-open:hover { border-color: rgb(59, 224, 195); color: #fff; }
+
+        /* Android mode: হেডার কম্প্যাক্ট, কনটেন্ট ফোকাস */
+        body.mode-android .top-scroll-strip {
+            display: block;
+            max-height: 130px;
+            overflow: hidden;
+            opacity: 1;
+            transform: translateY(0);
+            transition: max-height 0.22s ease, opacity 0.2s ease, transform 0.2s ease;
+        }
+        body.mode-android .utility-bar {
+            grid-template-columns: 1fr auto 1fr;
+            font-size: 0.7rem;
+            padding: 5px 2.5%;
+            gap: 4px;
+            transition: padding 0.2s ease, font-size 0.2s ease;
+        }
+        body.mode-android .utility-bar .bismillah {
+            display: block;
+            font-size: 0.68rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        body.mode-android header {
+            padding: 8px 2.5%;
+            transition: padding 0.2s ease;
+        }
+        body.mode-android .header-main {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding: 8px 2.5%;
+            transition: gap 0.2s ease, padding 0.2s ease;
+        }
+        body.mode-android .search-wrap.wide .search-input,
+        body.mode-android .search-wrap.elec .search-input {
+            width: 100%;
+            max-width: none;
+            min-height: 42px;
+        }
+        body.mode-android .app-cta {
+            display: none !important;
+        }
+        body.mode-android .header-sub {
+            padding: 6px 2.5% 8px;
+            gap: 8px;
+            transition: padding 0.2s ease;
+        }
+        body.mode-android .sticky-top-cluster {
+            transition: box-shadow 0.2s ease;
+        }
+        body.mode-android.android-header-compact .top-scroll-strip {
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        body.mode-android.android-header-compact .utility-bar {
+            padding-top: 3px;
+            padding-bottom: 3px;
+            font-size: 0.62rem;
+        }
+        body.mode-android.android-header-compact .utility-bar .bismillah {
+            font-size: 0.6rem;
+            opacity: 0.9;
+        }
+        body.mode-android.android-header-compact .header-main {
+            grid-template-columns: auto 1fr;
+            gap: 6px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+        body.mode-android.android-header-compact .header-main .search-wrap.elec,
+        body.mode-android.android-header-compact .header-main .app-cta {
+            display: none !important;
+        }
+        body.mode-android.android-header-compact .search-wrap.wide .search-input {
+            min-height: 34px;
+            padding-top: 7px;
+            padding-bottom: 7px;
+            font-size: 14px;
+        }
+        body.mode-android.android-header-compact .header-sub {
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+        body.mode-android.android-header-compact .header-sub .user-row {
+            display: none;
+        }
+        body.mode-android.android-header-compact .main-nav a {
+            padding: 6px 8px;
+            font-size: 0.78rem;
+        }
+        body.mode-android.android-header-compact .nav-links .admin-login-btn {
+            font-size: 12px;
+            padding: 5px 9px;
+            margin-left: 8px;
+        }
+        body.mode-android.android-header-compact .sticky-top-cluster {
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+        }
+        body.mode-android #main-website > section[id],
+        body.mode-android #main-website .product-section[id] {
+            scroll-margin-top: 84px;
+        }
+
+        /* Premium RGB accent across page blocks */
+        .promo-card,
+        .categories-panel,
+        .product-card,
+        .member-card,
+        .dash-card,
+        .elec-card,
+        .footer-col {
+            position: relative;
+        }
+        .promo-card::before,
+        .categories-panel::before,
+        .member-card::before,
+        .dash-card::before,
+        .elec-card::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            background: linear-gradient(130deg, rgba(255, 94, 98, 0.38), rgba(94, 114, 255, 0.36), rgba(59, 224, 195, 0.34));
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .promo-card > *,
+        .categories-panel > *,
+        .member-card > *,
+        .dash-card > *,
+        .elec-card > * {
+            position: relative;
+            z-index: 1;
+        }
+        .promo-card:hover::before,
+        .categories-panel:hover::before,
+        .member-card:hover::before,
+        .dash-card:hover::before,
+        .elec-card:hover::before {
+            opacity: 1;
+        }
+        @media (max-width: 640px) {
+            .mode-options { grid-template-columns: 1fr; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="deviceModeOverlay" class="device-mode-overlay" role="dialog" aria-modal="true" aria-labelledby="deviceModeTitle">
+        <div class="device-mode-card">
+            <h2 id="deviceModeTitle">শুরু করার আগে mode বাছাই করুন</h2>
+            <p>আপনার ডিভাইস অনুযায়ী ভিউ সেট হবে। পরে নিচের <strong style="color:#ff9800;">Change Mode</strong> বাটন থেকে বদলাতে পারবেন।</p>
+            <div class="mode-options">
+                <button type="button" class="mode-btn" data-mode="android">
+                    <strong>Android User</strong>
+                    <small>Compact header + full-screen friendly content view</small>
+                </button>
+                <button type="button" class="mode-btn" data-mode="desktop">
+                    <strong>Desktop User</strong>
+                    <small>Current full layout (আগের মতোই)</small>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" id="openModeSelector" class="mode-switch-open" aria-label="View mode বদলান">Change Mode</button>
+
+    <!-- উপরের কেয়ার/ডোনেশন: স্টিকি নয়—স্ক্রল করলে উঠে যাবে, মোবাইলে বই দেখার জায়গা বাড়বে -->
+    <div class="top-scroll-strip">
+        <div class="care-strip">
+            <div class="care-hotline">
+                <strong>Customer Care</strong> · হটলাইন: <strong>01799584300</strong> · (সকাল ৯টা – রাত ৮টা)
+            </div>
+            <a href="#track-order">অর্ডার ট্র্যাক করুন</a>
+        </div>
+        <div class="donation-strip">
+            <span>বই ডোনেশন করতে চান?</span> <a href="#donation">বই প্লাস ডোনেশন</a> — জ্ঞান ছড়িয়ে দিন।
+        </div>
+    </div>
+
+    <div class="sticky-top-cluster">
+        <div class="utility-bar">
+            <span id="live-time" aria-live="polite"></span>
+            <span class="bismillah">বিসমিল্লাহির রাহমানির রাহিম</span>
+            <span id="live-date-bn" aria-live="polite"></span>
+        </div>
+
+        <header>
+            <div class="header-main">
+                <!-- লোগো: নিচের img এর src="" তে লোকাল ফাইল (যেমন images/logo.png) বা পূর্ণ ইমেজ URL বসান -->
+                <a href="#" class="logo-wrap">
+                    <img src="https://github.com/mdtamimapps-arch/boi-plus/blob/main/images/Screenshot_2026-04-12-12-23-56-90_c0d35d5c8ea536686f7fb1c9f2f8f274.jpg?raw=true" alt="বই প্লাস লোগো" class="site-logo" id="siteLogo" width="48" height="48">
+                    <span class="logo-text">বই প্লাস ➕📚</span>
+                </a>
+                <div class="search-wrap wide">
+                    <label for="bookSearch" class="visually-hidden" style="position:absolute;width:1px;height:1px;overflow:hidden;">বই খুঁজুন</label>
+                    <input type="search" id="bookSearch" class="search-input" placeholder="বই, লেখক বা বিষয় খুঁজুন..." autocomplete="off">
+                </div>
+                <div class="search-wrap elec">
+                    <label for="electronicsSearch" class="visually-hidden" style="position:absolute;width:1px;height:1px;overflow:hidden;">ইলেক্ট্রনিক্স খুঁজুন</label>
+                    <input type="search" id="electronicsSearch" class="search-input" placeholder="ইলেক্ট্রনিক্স: Charger, Fan, Smart Watch…" autocomplete="off">
+                </div>
+                <div class="app-cta">
+                    <a href="https://play.google.com/store/apps" target="_blank" rel="noopener noreferrer" title="Google Play">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play থেকে ডাউনলোড">
+                    </a>
+                    <div class="app-text"><strong>বই প্লাস অ্যাপ</strong>Download করুন</div>
+                </div>
+            </div>
+            <div class="header-sub">
+                <div class="user-row">
+                    <span>Hello,</span> <a href="#signin">Sign in</a>
+                    <a href="#cart" class="cart-link" title="কার্ট">🛒 কার্ট <span id="cart-count">0</span></a>
+                </div>
+                <nav class="main-nav" aria-label="মূল মেনু">
+                    <a href="#">হোম</a>
+                    <a href="#books">বই</a>
+                    <a href="#electronics">ইলেক্ট্রনিক্স</a>
+                    <a href="#super-store">সুপার স্টোর</a>
+                    <a href="#kids">কিডস জোন</a>
+                    <a href="#institutional">প্রাতিষ্ঠানিক অর্ডার</a>
+                    <a href="#contact">যোগাযোগ</a>
+                </nav>
+                <div class="nav-links">
+                    <button type="button" class="admin-login-btn" onclick="openLogin()">লগইন (Admin)</button>
+                </div>
+            </div>
+        </header>
+    </div>
+
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeLogin()">&times;</span>
+            <h2 style="color: #ff9800; margin-bottom: 20px;">অ্যাডমিন প্যানেল</h2>
+            <form onsubmit="handleLogin(event)">
+                <input type="text" id="username" class="login-input" placeholder="জানোনা 😶‍🌫️মনু😏 ( তামীম নিশ্চয়ই বলে দিছে😯😯)" required>
+                <input type="password" id="password" class="login-input" placeholder="সেইম কথা" required>
+                <button type="submit" class="login-submit">প্রবেশ করুন</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="main-website">
+        <section class="hero" id="top">
+            <h1>বই প্লাস: জ্ঞানের নতুন দিগন্ত</h1>
+            <h2>সাশ্রয়ী মূল্যে আপনার প্রিয় বই</h2>
+            <h3>সৃজনশীলতা এবং তথ্যের এক আধুনিক প্ল্যাটফর্ম। খুব শীঘ্রই আমরা নতুন সব ফিচার নিয়ে আসছি। সাথেই থাকুন!</h3>
+        </section>
+
+        <section id="track-order" style="scroll-margin-top:120px;padding:14px 5%;background:#141414;border-bottom:1px solid #2a2a2a;text-align:center;">
+            <strong style="color:#ff9800;">অর্ডার ট্র্যাক করুন</strong>
+            <span style="color:#888;margin:0 8px;">— অর্ডার আইডি দিয়ে স্ট্যাটাস (শীঘ্রই লাইভ)। হটলাইন: 01799584300</span>
+        </section>
+        <section id="donation" style="scroll-margin-top:120px;padding:12px 5%;background:#0f1a12;border-bottom:1px solid #253528;text-align:center;font-size:0.9rem;color:#a5d6a7;">
+            <strong>বই ডোনেশন:</strong> ব্যবহৃত বই দিন—<span style="color:#ccc;">শীঘ্রই সংগ্রহ পয়েন্ট ও ঠিকানা জানানো হবে।</span>
+        </section>
+
+        <div class="promo-row">
+            <div class="promo-card"><h4>বেস্টসেলার অ্যাওয়ার্ড ’২৫</h4><p>সেরা বই ও লেখকদের নির্বাচন।</p></div>
+            <div class="promo-card"><h4>আজকের অফার !</h4><p>প্রতিদিন নতুন ছাড়।</p></div>
+            <div class="promo-card"><h4>বইমেলা ২০২৬</h4><p>মেলা স্পেশাল কালেকশন।</p></div>
+        </div>
+
+        <div class="pill-row">
+            <span class="pill" style="border-color:#ff9800;color:#ff9800;">Just for you ✨</span>
+            <a href="#books" class="pill">লেখক</a>
+            <a href="#books" class="pill">বিষয়</a>
+            <a href="#books" class="pill">প্রকাশনী</a>
+            <a href="#books" class="pill">বইমেলা ২০২৬</a>
+            <a href="#books" class="pill">একাডেমিক বই</a>
+            <a href="#books" class="pill">ই-বুক</a>
+            <a href="#books" class="pill">অতিরিক্ত ছাড়ের বই</a>
+        </div>
+
+        <div class="toolbar-row">
+            <div>
+                <label for="sortBooks">সাজান</label>
+                <select id="sortBooks" aria-label="সাজান">
+                    <option value="">Default</option>
+                    <option>Best Seller</option>
+                    <option>New Released</option>
+                    <option>Price - Low to High</option>
+                    <option>Price - High to Low</option>
+                    <option>Discount - High to Low</option>
+                </select>
+            </div>
+            <div class="filter-chips">
+                <span class="chip">eBook</span>
+                <span class="chip">In Stock</span>
+                <span class="chip">Filter</span>
+                <span class="chip">Reset</span>
+            </div>
+        </div>
+
+        <section class="categories-panel" id="shop-categories" aria-labelledby="cat-heading">
+            <h3 id="cat-heading">Shop by Categories — বই</h3>
+            <p style="color:#888;font-size:0.9rem;margin-bottom:12px;">নিচে জনপ্রিয় ক্যাটাগরি—আরও দেখতে বাটন চাপুন।</p>
+            <div id="category-cloud" class="cat-cloud"></div>
+            <button type="button" class="cat-toggle" id="catToggle" aria-expanded="false">আরও ক্যাটাগরি দেখুন</button>
+        </section>
+
+        <section class="browse-section" id="weekly-ebook">
+            <div class="browse-head">
+                <h3>Weekly Best Seller — ই-বুক</h3>
+                <a href="#books" class="view-all">View All →</a>
+            </div>
+            <div class="horizontal-scroll" id="weekly-scroll">
+    <!-- HINT: Weekly row-তে বই যোগ করতে populateWeeklyRow() ফাংশনের items array-তে নতুন ["বই নাম","লেখক"] দিন -->
+    <div class="product-card" data-search="প্রোগ্রামিংয়ের চৌদ্দগোষ্ঠী ঝংকার মাহবুব">
+        <div class="product-img">
+            <img src="https://scontent.fdac190-1.fna.fbcdn.net/v/t39.30808-6/612608679_122182720874381463_2758780002660335582_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=107&ccb=1-7&_nc_sid=2a1932&_nc_eui2=AeGEKdmZu59w4k3a1_SI6tVaJzyOZyt8kXwnPI5nK3yRfPZAEwnmWl4BP6h5WhKi2ABZcY-zHE7vYlvwybeU6EVv&_nc_ohc=tDTmb9nTVl0Q7kNvwF7FvLa&_nc_oc=AdoDZUtQ9XSTqOdIIePbZz6fI936x7Q6rVwsgMl5WxVpVjucawnUnFDdaTrxtC1xJj8&_nc_zt=23&_nc_ht=scontent.fdac190-1.fna&_nc_gid=9w01qLXFAjrVJbx0nI7bBQ&_nc_ss=7a3a8&oh=00_Af1t4kQ_bemTWLWmP1x52AEk1NQgIV6hrtWWv7QH3aEiHQ&oe=69D5AC35" alt="Book">
+        </div>
+        <div class="product-info">
+            <h4>প্রোগ্রামিংয়ের চৌদ্দগোষ্ঠী</h4>
+            <p class="author">ঝংকার মাহবুব</p>
+            <div class="price-box">
+                <span class="current-price">৳২৫০</span>
+            </div>
+            <button type="button" class="buy-btn">ঝুড়িতে রাখুন 🛒</button>
+        </div>
+    </div>
+
+    </div>
+        </section>
+
+        <div class="browse-section" id="category-rows"></div>
+
+        <section id="super-store" class="browse-section" style="scroll-margin-top:120px;">
+            <div class="browse-head">
+                <h3>সুপার স্টোর</h3>
+                <a href="#electronics" class="view-all">ইলেক্ট্রনিক্স দেখুন →</a>
+            </div>
+            <p style="color:#888;font-size:0.92rem;max-width:800px;">স্টেশনারি, খাবার, গিফট ভাউচার, কিচেন ও আরও—শীঘ্রই পণ্য তালিকা।</p>
+        </section>
+
+        <section id="institutional" class="categories-panel" style="scroll-margin-top:120px;">
+            <h3>প্রাতিষ্ঠানিক অর্ডার</h3>
+            <p style="color:#aaa;font-size:0.92rem;">লাইব্রেরি, স্কুল, কলেজ ও অফিসের বাল্ক অর্ডার—যোগাযোগ: <strong style="color:#ff9800;">01799584300</strong></p>
+        </section>
+
+        <section class="electronics-section" id="electronics">
+            <h2 class="section-title">ইলেক্ট্রনিক্স 🔌</h2>
+            <p style="color:#8ab4d8;max-width:720px;margin:0 auto 24px;text-align:center;font-size:0.95rem;">
+                Search: Charger, Fan, Smart Watch, Auto Volt Shield — নিচের কার্ডগুলো ফিল্টার হবে।
+            </p>
+            <div class="elec-grid" id="elec-grid">
+                <div class="elec-card" data-elec-tags="charger adapter usb">
+                    <div class="elec-icon">🔌</div>
+                    <h4>চার্জার ও অ্যাডাপ্টার</h4>
+                    <p>ফোন / ল্যাপটপ চার্জার</p>
+                </div>
+                <div class="elec-card" data-elec-tags="fan desk cooling">
+                    <div class="elec-icon">🌀</div>
+                    <h4>ফ্যান</h4>
+                    <p>টেবিল / রিচার্জেবল</p>
+                </div>
+                <div class="elec-card" data-elec-tags="smart watch wearable">
+                    <div class="elec-icon">⌚</div>
+                    <h4>স্মার্ট ওয়াচ</h4>
+                    <p>হেলথ ট্র্যাকিং</p>
+                </div>
+                <div class="elec-card" data-elec-tags="auto volt shield stabilizer orelco">
+                    <div class="elec-icon">⚡</div>
+                    <h4>Auto Volt Shield</h4>
+                    <p>ভোল্ট স্টেবিলাইজার</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="product-section" id="books">
+            <h2 class="section-title">আমাদের সংগ্রহ 📚</h2>
+            <p class="books-lead">Recently sold book products — উপরের সার্চ দিয়ে ফিল্টার করুন।</p>
+            <!-- নতুন বই: এই গ্রিডের ভেতর একটা সম্পূর্ণ product-card ব্লক কপি করে বসান। data-search এ বইনাম+লেখক (সার্চ মিলবে)। ছবি = img src -->
+            <!-- HINT: মূল বই সেকশনে বই যোগ করার সবচেয়ে সহজ জায়গা = নিচের #product-grid-main -->
+            <div class="product-grid" id="product-grid-main">
+
+                <div class="product-card" data-search="প্যারাডক্সিক্যাল সাজিদ আরিফ আজাদ">
+                    <div class="product-img">
+                        <img src="https://scontent.fdac190-1.fna.fbcdn.net/v/t39.30808-1/444487663_473076435248586_8270301554850071899_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=108&ccb=1-7&_nc_sid=1d2534&_nc_eui2=AeEduylGj6A1nV4j4mJrs9A9898WhjLMNlzz3xaGMsw2XJJU4yIFTQqoXCPxL5ZeqWb2H5hy8hhU0OhdTjrUkyDN&_nc_ohc=B7IuaZDtTHgQ7kNvwGqi2IN&_nc_oc=Adqe8JRSe6VTNp3u_blSR81FiiPe6PO2dZlomRhZ-6Z5gATatP8P0IKFxxD6_VLQLCI&_nc_zt=24&_nc_ht=scontent.fdac190-1.fna&_nc_gid=07OIiCsZeJIn08zJ-5rYZw&_nc_ss=7a3a8&oh=00_Af1igkeKRANNmIGPqv0f9FSkd2J541hQF_AG_d05tgVwCA&oe=69D588B4" alt="">
+                        <span class="discount-tag">-২০%</span>
+                    </div>
+                    <div class="product-info">
+                        <h4>প্যারাডক্সিক্যাল সাজিদ</h4>
+                        <p class="author">আরিফ আজাদ</p>
+                        <div class="price-box">
+                            <span class="current-price">৳২৪০</span>
+                            <span class="old-price">৳৩০০</span>
+                        </div>
+                        <button type="button" class="buy-btn">ঝুড়িতে রাখুন 🛒</button>
+                    </div>
+                </div>
+
+                <div class="product-card" data-search="হিমুর হাতে কয়েকটি নীলপদ্ম হুমায়ূন আহমেদ">
+                    <div class="product-img">
+                        <img src="https://scontent.fdac190-1.fna.fbcdn.net/v/t39.30808-6/533832210_122149491356791984_6719225686092712947_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=2a1932&_nc_eui2=AeFZEA4lH-V3yQ1CCnrlQ1CwkEjWPyMXn1SQSNY_IxefVDH7kfNhBNBGVtLiSVbyRgXksBf9wqXXAY-fs6yUQs1i&_nc_ohc=pI_-cnIoJoEQ7kNvwFtyueb&_nc_oc=AdrpDQen1HFawKzLR2jHuNw-xNjAZ5hjdZGbzNg1PRQPsxPI_dniDtzo_SL8KDxYqM4&_nc_zt=23&_nc_ht=scontent.fdac190-1.fna&_nc_gid=ZUDQP29JFIIRhG521mvCUw&_nc_ss=7a3a8&oh=00_Af1xjmyN6x6hntOiUM-fkXqIBFYi2VkPCyT88yJdiw11Ww&oe=69D59EE0" alt="">
+                    </div>
+                    <div class="product-info">
+                        <h4>হিমুর হাতে কয়েকটি নীলপদ্ম</h4>
+                        <p class="author">হুমায়ূন আহমেদ</p>
+                        <div class="price-box">
+                            <span class="current-price">৳১৮০</span>
+                        </div>
+                        <button type="button" class="buy-btn">ঝুড়িতে রাখুন 🛒</button>
+                    </div>
+                </div>
+
+                <div class="product-card" data-search="বেলা ফুরাবার আগে আরিফ আজাদ">
+                    <div class="product-img">
+                        <img src="https://scontent.fdac190-1.fna.fbcdn.net/v/t39.30808-1/347606315_195335299626424_1332544197375608636_n.jpg?stp=c0.258.1079.1079a_dst-jpg_s200x200_tt6&_nc_cat=109&ccb=1-7&_nc_sid=e99d92&_nc_eui2=AeFkY0VOf6wWia13mdBtEJC76ZPt6Le2Oljpk-3ot7Y6WMFmoLfncDzK2mdG6OUzPn6edS49KG9f0q1L0c4g4hVv&_nc_ohc=B3asb3yTGfAQ7kNvwGdKuP9&_nc_oc=Adrf9q3Dc_VzEC57_Jfy-wF03LkhXXedvb0TzcVqq6CoqN1Zn1RSiUgRUelgr74rK4E&_nc_zt=24&_nc_ht=scontent.fdac190-1.fna&_nc_gid=S4jdz-hieJm5ytlINCvkPQ&_nc_ss=7a3a8&oh=00_Af3CUMHtIZkdcXBO1JQDOEnMfbnDpvNOVv7g2MiEaQWqBg&oe=69D5B54B" alt="">
+                        <span class="discount-tag">-১০%</span>
+                    </div>
+                    <div class="product-info">
+                        <h4>বেলা ফুরাবার আগে</h4>
+                        <p class="author">আরিফ আজাদ</p>
+                        <div class="price-box">
+                            <span class="current-price">৳১৮০</span>
+                            <span class="old-price">৳২০০</span>
+                        </div>
+                        <button type="button" class="buy-btn">ঝুড়িতে রাখুন 🛒</button>
+                    </div>
+                </div>
+
+                <div class="product-card" data-search="প্রোগ্রামিংয়ের চৌদ্দগোষ্ঠী ঝংকার মাহবুব">
+                    <div class="product-img">
+                        <img src="https://scontent.fdac190-1.fna.fbcdn.net/v/t39.30808-6/612608679_122182720874381463_2758780002660335582_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=107&ccb=1-7&_nc_sid=2a1932&_nc_eui2=AeGEKdmZu59w4k3a1_SI6tVaJzyOZyt8kXwnPI5nK3yRfPZAEwnmWl4BP6h5WhKi2ABZcY-zHE7vYlvwybeU6EVv&_nc_ohc=tDTmb9nTVl0Q7kNvwF7FvLa&_nc_oc=AdoDZUtQ9XSTqOdIIePbZz6fI936x7Q6rVwsgMl5WxVpVjucawnUnFDdaTrxtC1xJj8&_nc_zt=23&_nc_ht=scontent.fdac190-1.fna&_nc_gid=9w01qLXFAjrVJbx0nI7bBQ&_nc_ss=7a3a8&oh=00_Af1t4kQ_bemTWLWmP1x52AEk1NQgIV6hrtWWv7QH3aEiHQ&oe=69D5AC35" alt="">
+                    </div>
+                    <div class="product-info">
+                        <h4>প্রোগ্রামিংয়ের চৌদ্দগোষ্ঠী</h4>
+                        <p class="author">ঝংকার মাহবুব</p>
+                        <div class="price-box">
+                            <span class="current-price">৳২৫০</span>
+                        </div>
+                        <button type="button" class="buy-btn">ঝুড়িতে রাখুন 🛒</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="team-section" id="contact">
+            <h2 class="section-title">আমাদের টিম ও যোগাযোগ 🤝</h2>
+            <div class="team-grid">
+                <div class="member-card"><h3>Md. Mehedi Hasan</h3><p style="color:#888;font-size:0.95rem;margin-top:8px;">Mehedi EEE</p></div>
+                <div class="member-card"><h3>Md Khairul Islam</h3><p style="color:#888;font-size:0.95rem;margin-top:8px;">Khairul ALCHEMIST</p></div>
+                <div class="member-card"><h3>Md. Walid Bin Ali</h3><p style="color:#888;font-size:0.95rem;margin-top:8px;">Walid ARCHITECTURE</p></div>
+                <div class="member-card"><h3>Md Mahadi Hasan Tamim</h3><p style="color:#888;font-size:0.95rem;margin-top:8px;">Tamim</p></div>
+            </div>
+        </section>
+    </div>
+
+    <div id="admin-dashboard">
+        <div class="dashboard-header">
+            <div>
+                <h1 style="color: #ff9800;">বই প্লাস অ্যাডমিন প্যানেল 🛡️</h1>
+                <p>তোমাকে স্বাগতম, <span id="logged-user" style="color: #fff; font-weight: bold;"></span>!</p>
+            </div>
+            <button type="button" class="logout-btn" onclick="logout()">লগ আউট</button>
+        </div>
+
+        <div class="dash-grid">
+            <div class="dash-card">
+                <h3>👥 মেম্বারদের বিস্তারিত তথ্য</h3>
+                <ul class="admin-info-list">
+                    <li>
+                        <b>১. Md. Mehedi Hasan</b> (Mehedi EEE)<br>
+                        <span class="info-tag">পেশা: স্টুডেন্ট | ফোন: ০১৯৮৮৮৫৪৬৭১</span>
+                        <span class="info-tag">ঠিকানা: (তথ্য প্রয়োজন)</span>
+                    </li>
+                    <li>
+                        <b>২. Md Khairul Islam</b> (Khairul ALCHEMIST)<br>
+                        <span class="info-tag">পেশা: স্টুডেন্ট | ফোন: ০১৮৪২৪৮০৭৩৯</span>
+                        <span class="info-tag">ঠিকানা: Gazipur board bazar</span>
+                    </li>
+                    <li>
+                        <b>৩. Md. Walid Bin Ali</b> (Walid ARCHITECTURE)<br>
+                        <span class="info-tag">পেশা: স্টুডেন্ট | ফোন: ০১৯৯৫৩৫১৪০৩</span>
+                        <span class="info-tag">ঠিকানা: তেজগাঁও, ঢাকা</span>
+                    </li>
+                    <li>
+                        <b>৪. Md Mahadi Hasan Tamim</b> (Tamim)<br>
+                        <span class="info-tag">পেশা: স্টুডেন্ট | ফোন: ০১৭৯৯৫৮৪৩০০</span>
+                        <span class="info-tag">ঠিকানা: কুড়িগ্রাম</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="dash-card">
+                <h3>📌 অভ্যন্তরীণ নোটিশ (সংরক্ষিত)</h3>
+                <p id="notice-intro-text" class="notice-intro">নোটিশ লোড হচ্ছে…</p>
+                <div id="notice-editor-wrap" class="notice-editor-wrap" hidden>
+                    <form class="notice-form" onsubmit="addNotice(event)">
+                        <input type="text" id="noticeTitle" placeholder="শিরোনাম (যেমন: মিটিং)">
+                        <textarea id="noticeBody" placeholder="বিস্তারিত..."></textarea>
+                        <button type="submit" class="notice-add-btn">নোটিশ যোগ করুন</button>
+                    </form>
+                </div>
+                <div id="notice-no-edit-msg" class="notice-lock-msg" hidden>
+                    👁 এই যে বন্ধু শোনো—তুমি শুধু নোটিশ <strong>দেখতে</strong> পারবে। <strong>যোগ বা মুছতে</strong> চেষ্টা করো না; <strong>Tamim</strong>-ই করবে। 😄
+                </div>
+                <div id="notice-list-admin"></div>
+                <a href="https://meet.google.com/your-link" target="_blank" rel="noopener noreferrer" class="meet-btn">Google Meet</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer-mega" id="site-footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>Customer Care</h4>
+                <p style="color:#888;font-size:0.88rem;line-height:1.6;margin-bottom:10px;">
+                    হটলাইন: <strong style="color:#ff9800;">01799584300</strong><br>
+                    (সকাল ৯টা – রাত ৮টা)<br>
+                    <a href="mailto:care@boiplus.local">care@boiplus.local</a>
+                </p>
+            </div>
+            <div class="footer-col">
+                <h4>কর্পোরেট / বিক্রেতা</h4>
+                <ul>
+                    <li><a href="#seller">বিক্রেতা হতে চান</a></li>
+                    <li><a href="#institutional">প্রাতিষ্ঠানিক অর্ডার</a></li>
+                    <li><a href="#wholesale">হোলসেল</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>ঠিকানা</h4>
+                <p style="color:#888;font-size:0.88rem;">ঢাকা, বাংলাদেশ<br><a href="mailto:admin@boiplus.local">admin@boiplus.local</a></p>
+            </div>
+            <div class="footer-col">
+                <h4>সাপোর্ট</h4>
+                <ul>
+                    <li><a href="#track-order">অর্ডার ট্র্যাক</a></li>
+                    <li><a href="#contact">যোগাযোগ</a></li>
+                    <li><a href="#">সচরাচর জিজ্ঞাসা</a></li>
+                    <li><a href="#">হেল্প ডেস্ক</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>পলিসি</h4>
+                <ul>
+                    <li><a href="#">শর্তাবলী</a></li>
+                    <li><a href="#">গোপনীয়তা</a></li>
+                    <li><a href="#">রিটার্ন ও রিফান্ড</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>JOIN US</h4>
+                <div class="social-row" aria-label="সোশ্যাল">
+                    <a href="#" aria-label="Facebook">f</a>
+                    <a href="#" aria-label="Twitter">𝕏</a>
+                    <a href="#" aria-label="Telegram">✈</a>
+                    <a href="#" aria-label="WhatsApp">W</a>
+                </div>
+                <p style="margin-top:12px;font-size:0.82rem;color:#666;">Download App — উপরে Google Play ব্যাজ।</p>
+            </div>
+        </div>
+        <div class="footer-about">
+            <p><strong style="color:#aaa;">বই প্লাস</strong> — বই, ইলেক্ট্রনিক্স ও আরও পণ্যের জন্য একটি আধুনিক প্ল্যাটফর্ম। বিশাল ক্যাটাগরি, সহজ নেভিগেশন ও দ্রুত ডেলিভারির লক্ষ্যে কাজ করছি।</p>
+            <p style="margin-top:12px;">&copy; ২০২৬ বই প্লাস। টিম মেম্বারদের তথ্য সুরক্ষিত। Design_by_TAMIM</p>
+        </div>
+    </footer>
+
+    <!-- মোবাইল: দ্রুত উপরে / নিচে স্ক্রল (টাচ বান্ধব) -->
+    <div class="scroll-fab" id="scrollFab" role="navigation" aria-label="দ্রুত স্ক্রল">
+        <div class="scroll-fab-inner">
+            <button type="button" class="scroll-fab-btn" id="scrollFabTop" title="উপরে" aria-label="পেজের একদম উপরে যান">↑</button>
+            <button type="button" class="scroll-fab-btn" id="scrollFabBottom" title="নিচে" aria-label="পেজের একদম নিচে যান">↓</button>
+        </div>
+    </div>
+
+    <script>
+        const NOTICE_STORAGE_KEY = "boiPlusInternalNotices";
+        const VIEW_MODE_KEY = "boiPlusViewMode";
+        const DEFAULT_NOTICES = [
+            { id: "def-1", title: "মিটিং", body: "মিটিং রাত ৯ টায়।", isDefault: true },
+            { id: "def-2", title: "চাঁদা", body: "সাপ্তাহিক চাঁদা জমা দিন।", isDefault: true },
+            { id: "def-3", title: "ইনভেন্টরি", body: "নতুন ইনভেন্টরি আপডেট করুন।", isDefault: true }
+        ];
+
+        const adminData = {
+            "mehedi": "01988854671",
+            "khairul": "01842480739",
+            "walid": "01995351403",
+            "tamim": "01799584300"
+        };
+
+        /** সবাই ড্যাশবোর্ড দেখতে পারবে; নোটিশ এডিট শুধু এই ইউজার */
+        const NOTICE_EDITOR_USER = "tamim";
+        let currentAdminUser = null;
+
+        const modal = document.getElementById("loginModal");
+        const mainWeb = document.getElementById("main-website");
+        const dashBoard = document.getElementById("admin-dashboard");
+        const modeOverlay = document.getElementById("deviceModeOverlay");
+        const modeOpenBtn = document.getElementById("openModeSelector");
+
+        function setViewMode(mode) {
+            const normalized = mode === "android" ? "android" : "desktop";
+            document.body.classList.remove("mode-android", "mode-desktop");
+            document.body.classList.add("mode-" + normalized);
+            if (normalized !== "android") {
+                document.body.classList.remove("android-header-compact");
+            }
+            localStorage.setItem(VIEW_MODE_KEY, normalized);
+            if (modeOverlay) modeOverlay.classList.remove("show");
+            updateAndroidHeaderCompactState();
+        }
+
+        function openViewModeSelector() {
+            if (modeOverlay) modeOverlay.classList.add("show");
+        }
+
+        function initViewMode() {
+            const saved = localStorage.getItem(VIEW_MODE_KEY);
+            if (saved === "android" || saved === "desktop") {
+                setViewMode(saved);
+            } else {
+                openViewModeSelector();
+            }
+            if (modeOverlay) {
+                modeOverlay.querySelectorAll("[data-mode]").forEach(function (btn) {
+                    btn.addEventListener("click", function () {
+                        setViewMode(this.getAttribute("data-mode"));
+                    });
+                });
+            }
+            if (modeOpenBtn) {
+                modeOpenBtn.addEventListener("click", openViewModeSelector);
+            }
+            window.addEventListener("scroll", updateAndroidHeaderCompactState, { passive: true });
+            window.addEventListener("resize", updateAndroidHeaderCompactState);
+            updateAndroidHeaderCompactState();
+        }
+
+        function updateAndroidHeaderCompactState() {
+            const isAndroidMode = document.body.classList.contains("mode-android");
+            if (!isAndroidMode) return;
+            const y = window.scrollY || window.pageYOffset || 0;
+            if (y > 24) {
+                document.body.classList.add("android-header-compact");
+            } else if (y < 8) {
+                document.body.classList.remove("android-header-compact");
+            }
+        }
+
+        function loadNoticesFromStorage() {
+            try {
+                const raw = localStorage.getItem(NOTICE_STORAGE_KEY);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveNoticesToStorage(list) {
+            localStorage.setItem(NOTICE_STORAGE_KEY, JSON.stringify(list));
+        }
+
+        function getAllNoticesForDisplay() {
+            const custom = loadNoticesFromStorage();
+            return [...DEFAULT_NOTICES, ...custom];
+        }
+
+        function canEditNotices() {
+            return currentAdminUser === NOTICE_EDITOR_USER;
+        }
+
+        function applyNoticeEditorUI() {
+            const wrap = document.getElementById("notice-editor-wrap");
+            const msg = document.getElementById("notice-no-edit-msg");
+            const intro = document.getElementById("notice-intro-text");
+            if (!wrap || !msg) return;
+            if (canEditNotices()) {
+                wrap.hidden = false;
+                msg.hidden = true;
+                if (intro) {
+                    intro.textContent = "নিচে নোটিশ যোগ বা মুছতে পারবেন—ডেটা ব্রাউজারে সংরক্ষিত (localStorage)।";
+                }
+            } else {
+                wrap.hidden = true;
+                msg.hidden = false;
+                if (intro) {
+                    intro.textContent = "আপনি মেম্বার হিসেবে ড্যাশবোর্ড দেখছেন। চাপ নিবেন না—নোটিশ শুধু পড়বেন; সম্পাদনা করার দরকার নাই।";
+                }
+            }
+        }
+
+        function renderNotices() {
+            const box = document.getElementById("notice-list-admin");
+            if (!box) return;
+            const custom = loadNoticesFromStorage();
+            const defaults = DEFAULT_NOTICES;
+            const editor = canEditNotices();
+            let html = "";
+
+            defaults.forEach((n) => {
+                html += `<div class="notice-item" data-id="${escapeHtml(n.id)}">
+                    <div class="notice-item-body"><strong>${escapeHtml(n.title)}</strong><span>${escapeHtml(n.body)}</span></div>
+                    <span class="info-tag" style="margin:0;">(ডিফল্ট)</span>
+                </div>`;
+            });
+
+            custom.forEach((n) => {
+                const safeId = escapeHtml(n.id);
+                const delBtn = editor
+                    ? `<button type="button" class="notice-del" data-del-id="${safeId}">মুছুন</button>`
+                    : "";
+                html += `<div class="notice-item" data-id="${safeId}">
+                    <div class="notice-item-body"><strong>${escapeHtml(n.title)}</strong><span>${escapeHtml(n.body)}</span></div>
+                    ${delBtn}
+                </div>`;
+            });
+
+            box.innerHTML = html || "<p style='color:#666;'>কোনো কাস্টম নোটিশ নেই।</p>";
+
+            if (editor) {
+                box.querySelectorAll(".notice-del").forEach((btn) => {
+                    btn.addEventListener("click", function () {
+                        deleteNotice(this.getAttribute("data-del-id"));
+                    });
+                });
+            }
+        }
+
+        function escapeHtml(s) {
+            const d = document.createElement("div");
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function addNotice(e) {
+            e.preventDefault();
+            if (!canEditNotices()) {
+                alert("নোটিশ যোগ করার অনুমতি শুধু Tamim এর।");
+                return;
+            }
+            const title = document.getElementById("noticeTitle").value.trim();
+            const body = document.getElementById("noticeBody").value.trim();
+            if (!title || !body) {
+                alert("শিরোনাম ও বিস্তারিত দুটোই দিন।");
+                return;
+            }
+            const list = loadNoticesFromStorage();
+            list.push({
+                id: "n-" + Date.now() + "-" + Math.random().toString(36).slice(-6),
+                title,
+                body
+            });
+            saveNoticesToStorage(list);
+            document.getElementById("noticeTitle").value = "";
+            document.getElementById("noticeBody").value = "";
+            renderNotices();
+        }
+
+        function deleteNotice(id) {
+            if (!canEditNotices()) return;
+            if (!id) return;
+            const list = loadNoticesFromStorage().filter((n) => n.id !== id);
+            saveNoticesToStorage(list);
+            renderNotices();
+        }
+
+        function openLogin() { modal.style.display = "block"; }
+        function closeLogin() { modal.style.display = "none"; }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const userBox = document.getElementById("username").value.trim().toLowerCase();
+            const passBox = document.getElementById("password").value.trim();
+
+            if (adminData[userBox] && adminData[userBox] === passBox) {
+                closeLogin();
+                currentAdminUser = userBox;
+                mainWeb.style.display = "none";
+                dashBoard.style.display = "block";
+                document.getElementById("logged-user").innerText = userBox.toUpperCase();
+                window.scrollTo(0, 0);
+                applyNoticeEditorUI();
+                renderNotices();
+            } else {
+                alert("ভুল নাম বা পাসওয়ার্ড! মামুর বেটা কি দিয়েছিস 😁😀");
+            }
+        }
+
+        function logout() {
+            currentAdminUser = null;
+            dashBoard.style.display = "none";
+            mainWeb.style.display = "block";
+            alert("লগ আউট সফল।");
+            window.scrollTo(0, 0);
+        }
+
+        window.onclick = function (event) { if (event.target === modal) closeLogin(); };
+
+        /* লাইভ সময় ও বাংলা তারিখ */
+        function padBanglaTime(d) {
+            return d.toLocaleTimeString("bn-BD", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: true
+            });
+        }
+
+        function formatBanglaDate(d) {
+            try {
+                const beng = new Intl.DateTimeFormat("bn-BD-u-ca-beng", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                }).format(d);
+                return beng;
+            } catch {
+                return d.toLocaleDateString("bn-BD", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+            }
+        }
+
+        function tickClock() {
+            const now = new Date();
+            const tEl = document.getElementById("live-time");
+            const dEl = document.getElementById("live-date-bn");
+            if (tEl) tEl.textContent = padBanglaTime(now);
+            if (dEl) dEl.textContent = formatBanglaDate(now);
+        }
+
+        tickClock();
+        setInterval(tickClock, 1000);
+
+        /* বই সার্চ */
+        document.getElementById("bookSearch").addEventListener("input", function () {
+            const q = this.value.trim().toLowerCase();
+            document.querySelectorAll("#product-grid-main .product-card").forEach((card) => {
+                const hay = (card.getAttribute("data-search") || "").toLowerCase();
+                if (!q || hay.includes(q)) card.classList.remove("hidden-search");
+                else card.classList.add("hidden-search");
+            });
+        });
+
+        const BOOK_CATEGORIES = [
+            "কৃষি ও কৃষক", "ড্রয়িং, পেইন্টিং ডিজাইন ও ফটোগ্রাফি", "বাংলাদেশ", "জীবনী, স্মৃতিচারণ ও সাক্ষাৎকার",
+            "ব্যবসা, বিনিয়োগ ও অর্থনীতি", "শিশু-কিশোর বই", "রচনাসমগ্র/সংকলন", "কমিকস, নকশা ও ছবির গল্প",
+            "কম্পিউটার, ইন্টারনেট, ফ্রিল্যান্সিং ও আউটসোর্সিং", "রান্নাবান্না, খাদ্য ও পুষ্টি", "ফ্যাশন ও রূপচর্চা",
+            "স্বাস্থ্য, পরিচর্যা ও রোগ নিরাময়", "ইতিহাস ও ঐতিহ্য", "ব্যঙ্গ ও রম্যরচনা", "প্রফেশনাল, জার্নাল ও রেফারেন্স",
+            "গণমাধ্যম ও সাংবাদিকতা", "ভাষা ও অভিধান", "মুক্তিযুদ্ধ", "সংগীত, চলচ্চিত্র ও বিনোদন", "পরিবেশ ও প্রকৃতি",
+            "বিবিধ", "দর্শন", "ধর্মীয় বই", "গণিত, বিজ্ঞান ও প্রযুক্তি", "আত্ম-উন্নয়ন, মোটিভেশনাল ও মেডিটেশন",
+            "খেলাধুলা", "অনুবাদ", "ভ্রমণ ও প্রবাস", "অমর একুশে গ্রন্থমেলা", "আইন ও বিচার", "প্রবন্ধ",
+            "বেস্ট সেলার বুকস", "ম্যাগাজিন", "বই প্লাস কালেকশন", "গল্প", "উপন্যাস", "বিদেশি ভাষার বই", "রাজনীতি",
+            "সমাজ, সভ্যতা ও সংস্কৃতি", "পশ্চিমবঙ্গের বই", "ছড়া, কবিতা ও আবৃত্তি", "রহস্য, গোয়েন্দা, ভৌতিক, থ্রিলার ও অ্যাডভেঞ্চার",
+            "প্রাণী ও জীবজগৎ", "সায়েন্স ফিকশন", "ভর্তি, নিয়োগ ও প্রস্তুতি পরীক্ষা", "একাডেমিক", "ইউনিভার্সিটি",
+            "ইসলামি বই", "ইংরেজি ভাষার বই", "ই-বুক", "অতিরিক্ত ছাড়ের বই", "বইমেলা ২০২৬", "প্রি অর্ডার",
+            "كتب اللغة العربية والأردية", "অলিম্পিয়াড", "অফার", "প্যারালাল টেক্সট", "ভর্তি প্রস্তুতি",
+            "ফ্রিল্যান্সিং ও আউটসোর্সিং", "বিজ্ঞান ও প্রযুক্তি", "বিনিয়োগ ও অর্থনীতি", "পরিচর্যা ও রোগ নিরাময়",
+            "রহস্য ও অ্যাডভেঞ্চার", "আত্ম-উন্নয়ন ও মেডিটেশন", "শিশু-কিশোর বই", "নাটকের বই", "পরিবার ও প্যারেন্টিং",
+            "পুরস্কারপ্রাপ্ত বই", "ইন স্টক বুকস", "প্রসেসিং", "স্টকে থাকা বিদেশি বই"
+        ];
+
+        function renderCategoryCloud() {
+            const box = document.getElementById("category-cloud");
+            if (!box) return;
+            box.innerHTML = BOOK_CATEGORIES.map(function (name) {
+                return '<a href="#books" class="pill" title="' + name.replace(/"/g, "&quot;") + '">' + name + "</a>";
+            }).join("");
+        }
+
+        var catToggleEl = document.getElementById("catToggle");
+        if (catToggleEl) {
+            catToggleEl.addEventListener("click", function () {
+                const cloud = document.getElementById("category-cloud");
+                if (!cloud) return;
+                const expanded = cloud.classList.toggle("expanded");
+                this.setAttribute("aria-expanded", expanded ? "true" : "false");
+                this.textContent = expanded ? "কম দেখুন" : "আরও ক্যাটাগরি দেখুন";
+            });
+        }
+
+        function buildMiniCard(item) {
+            const title = item && item.title ? item.title : "নমুনা বই";
+            const author = item && item.author ? item.author : "লেখক";
+            return (
+                '<article class="product-card mini-book-card">' +
+                '<div class="mini-cover">📖</div>' +
+                '<div class="mini-meta"><h4>' + title + '</h4><p>' + author + "</p></div>" +
+                "</article>"
+            );
+        }
+
+        // HINT: সব mini row (Weekly + Category) এর বই এক জায়গা থেকে edit করতে চাইলে নিচে title/author বদলান।
+        const BOOK_SOURCE = {
+            "paradoxical-sajid": { title: "প্যারাডক্সিক্যাল সাজিদ", author: "আরিফ আজাদ" },
+            "himu-neelpoddo": { title: "হিমুর হাতে কয়েকটি নীলপদ্ম", author: "হুমায়ূন আহমেদ" },
+            "chouddogoshti": { title: "প্রোগ্রামিংয়ের চৌদ্দগোষ্ঠী", author: "ঝংকার মাহবুব" },
+            "sample-1": { title: "নমুনা বই ১", author: "লেখক" },
+            "sample-2": { title: "নমুনা বই ২", author: "লেখক" },
+            "sample-3": { title: "নমুনা বই ৩", author: "লেখক" },
+            "sample-4": { title: "নমুনা বই ৪", author: "লেখক" }
+        };
+
+        // HINT: Weekly row-তে বই দেখাতে নিচের key গুলো দিন (key অবশ্যই BOOK_SOURCE এ থাকতে হবে)।
+        const WEEKLY_BOOK_KEYS = ["paradoxical-sajid", "himu-neelpoddo", "chouddogoshti"];
+
+        function resolveBooksFromKeys(keys) {
+            return (keys || []).map(function (key) {
+                return BOOK_SOURCE[key];
+            }).filter(Boolean);
+        }
+
+        function populateWeeklyRow() {
+            const row = document.getElementById("weekly-scroll");
+            if (!row) return;
+            const books = resolveBooksFromKeys(WEEKLY_BOOK_KEYS);
+            row.innerHTML = books.map(function (item) { return buildMiniCard(item); }).join("");
+        }
+
+        // HINT: নতুন ক্যাটাগরি রো যোগ করতে নিচে নতুন object দিন: { title: "ক্যাটাগরি নাম", slug: "unique-slug" }
+        const CATEGORY_ROW_DEFS = [
+            { title: "ইসলামি বই", slug: "islam" },
+            { title: "উপন্যাস", slug: "novel" },
+            { title: "ভর্তি ও প্রস্তুতি পরীক্ষা", slug: "admission" },
+            { title: "শিশু-কিশোর বই", slug: "kids", sectionId: "kids" },
+            { title: "আত্ম-উন্নয়ন ও মেডিটেশন", slug: "self" },
+            { title: "রহস্য ও অ্যাডভেঞ্চার", slug: "thriller" },
+            { title: "পশ্চিমবঙ্গের বই", slug: "wb" },
+            { title: "ইংরেজি ভাষার বই", slug: "en" },
+            { title: "গল্প", slug: "story" },
+            { title: "ফ্রিল্যান্সিং ও আউটসোর্সিং", slug: "freelance" },
+            { title: "বিজ্ঞান ও প্রযুক্তি", slug: "sci" },
+            { title: "ইতিহাস ও ঐতিহ্য", slug: "hist" }
+        ];
+
+        // HINT: প্রতিটি category row-তে কোন বই দেখাবেন সেটা slug ধরে এখানে key list দিয়ে দিন।
+        // Example: islam: ["paradoxical-sajid", "new-book-key", ...]
+        const CATEGORY_BOOK_KEYS = {
+            islam: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            novel: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            admission: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            kids: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            self: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            thriller: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            wb: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            en: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            story: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            freelance: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            sci: ["sample-1", "sample-2", "sample-3", "sample-4"],
+            hist: ["sample-1", "sample-2", "sample-3", "sample-4"]
+        };
+
+        function populateCategoryRows() {
+            const host = document.getElementById("category-rows");
+            if (!host) return;
+            host.innerHTML = CATEGORY_ROW_DEFS.map(function (def) {
+                const sid = def.sectionId ? def.sectionId : "cat-row-" + def.slug;
+                const keys = CATEGORY_BOOK_KEYS[def.slug] || ["sample-1", "sample-2", "sample-3", "sample-4"];
+                const cards = resolveBooksFromKeys(keys).map(function (item) {
+                    return buildMiniCard(item);
+                }).join("");
+                return (
+                    '<section class="browse-section" id="' + sid + '">' +
+                    '<div class="browse-head"><h3>' + def.title + '</h3><a href="#books" class="view-all">View All →</a></div>' +
+                    '<div class="horizontal-scroll">' + cards + "</div></section>"
+                );
+            }).join("");
+        }
+
+        document.getElementById("electronicsSearch").addEventListener("input", function () {
+            const q = this.value.trim().toLowerCase();
+            document.querySelectorAll("#elec-grid .elec-card").forEach(function (el) {
+                const tags = (el.getAttribute("data-elec-tags") || "").toLowerCase();
+                const text = el.textContent.toLowerCase();
+                const ok = !q || tags.includes(q) || text.includes(q);
+                el.style.display = ok ? "" : "none";
+            });
+        });
+
+        initViewMode();
+        renderCategoryCloud();
+        populateWeeklyRow();
+        populateCategoryRows();
+
+        (function initScrollFab() {
+            var topBtn = document.getElementById("scrollFabTop");
+            var botBtn = document.getElementById("scrollFabBottom");
+            if (!topBtn || !botBtn) return;
+            topBtn.addEventListener("click", function () {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+            botBtn.addEventListener("click", function () {
+                var foot = document.getElementById("site-footer");
+                if (foot) {
+                    foot.scrollIntoView({ behavior: "smooth", block: "end" });
+                } else {
+                    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+                }
+            });
+        })();
+
+        /* লোগো: document.getElementById("siteLogo").src = "logo.png"; */
+    </script>
+</body>
+</html>
