@@ -254,16 +254,31 @@
         }
         .mini-book-card .mini-cover {
             height: 145px;
-            background:
-                radial-gradient(circle at 22% 20%, rgba(255, 94, 98, 0.25), transparent 45%),
-                radial-gradient(circle at 78% 25%, rgba(94, 114, 255, 0.28), transparent 50%),
-                linear-gradient(160deg, #242424, #151515);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #d6d6d6;
-            font-size: 2.05rem;
+            position: relative;
+            overflow: hidden;
             border-bottom: 1px solid rgba(120, 120, 120, 0.26);
+        }
+        .mini-book-card .mini-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.35s ease;
+        }
+        .mini-book-card:hover .mini-cover img {
+            transform: scale(1.06);
+        }
+        .mini-book-card .mini-discount {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(255, 152, 0, 0.95);
+            color: #121212;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 3px 8px;
+            box-shadow: 0 3px 10px rgba(255, 152, 0, 0.35);
         }
         .mini-book-card .mini-meta {
             padding: 11px 12px 13px;
@@ -280,6 +295,23 @@
             color: #9f9f9f;
             font-size: 12px;
             line-height: 1.35;
+        }
+        .mini-book-card .mini-price {
+            margin-top: 9px;
+            display: flex;
+            align-items: baseline;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+        .mini-book-card .mini-price .new {
+            color: #ffb74d;
+            font-size: 15px;
+            font-weight: 700;
+        }
+        .mini-book-card .mini-price .old {
+            color: #7f7f7f;
+            font-size: 12px;
+            text-decoration: line-through;
         }
 
         .electronics-section { padding: 40px 5%; background: linear-gradient(180deg, #0a1628 0%, #0d0d0d 100%); border-top: 1px solid #1e3a5f; }
@@ -1557,26 +1589,59 @@
             });
         }
 
+        function calcDiscountPercent(price, oldPrice) {
+            if (!oldPrice || oldPrice <= price) return 0;
+            return Math.round(((oldPrice - price) / oldPrice) * 100);
+        }
+
+        function formatBDT(value) {
+            return "৳" + Number(value || 0).toLocaleString("bn-BD");
+        }
+
         function buildMiniCard(item) {
             const title = item && item.title ? item.title : "নমুনা বই";
             const author = item && item.author ? item.author : "লেখক";
+            const price = item && item.price ? Number(item.price) : 0;
+            const oldPrice = item && item.oldPrice ? Number(item.oldPrice) : 0;
+            const discount = calcDiscountPercent(price, oldPrice);
+            const cover = item && item.image ? item.image : "https://via.placeholder.com/320x420/1f1f1f/9e9e9e?text=Book+Cover";
+            const discountTag = discount > 0 ? '<span class="mini-discount">-' + discount + "%</span>" : "";
+            const oldPriceText = oldPrice > price ? '<span class="old">' + formatBDT(oldPrice) + "</span>" : "";
             return (
                 '<article class="product-card mini-book-card">' +
-                '<div class="mini-cover">📖</div>' +
-                '<div class="mini-meta"><h4>' + title + '</h4><p>' + author + "</p></div>" +
+                '<div class="mini-cover"><img src="' + cover + '" alt="' + title + '">' + discountTag + "</div>" +
+                '<div class="mini-meta"><h4>' + title + '</h4><p>' + author + '</p><div class="mini-price"><span class="new">' + formatBDT(price) + "</span>" + oldPriceText + "</div></div>" +
                 "</article>"
             );
         }
 
-        // HINT: সব mini row (Weekly + Category) এর বই এক জায়গা থেকে edit করতে চাইলে নিচে title/author বদলান।
+        // HINT: সব mini row (Weekly + Category) এর বই এক জায়গা থেকে edit করতে চাইলে নিচে title/author/price/oldPrice/image বদলান।
         const BOOK_SOURCE = {
-            "paradoxical-sajid": { title: "প্যারাডক্সিক্যাল সাজিদ", author: "আরিফ আজাদ" },
-            "himu-neelpoddo": { title: "হিমুর হাতে কয়েকটি নীলপদ্ম", author: "হুমায়ূন আহমেদ" },
-            "chouddogoshti": { title: "প্রোগ্রামিংয়ের চৌদ্দগোষ্ঠী", author: "ঝংকার মাহবুব" },
-            "sample-1": { title: "নমুনা বই ১", author: "লেখক" },
-            "sample-2": { title: "নমুনা বই ২", author: "লেখক" },
-            "sample-3": { title: "নমুনা বই ৩", author: "লেখক" },
-            "sample-4": { title: "নমুনা বই ৪", author: "লেখক" }
+            "paradoxical-sajid": {
+                title: "প্যারাডক্সিক্যাল সাজিদ",
+                author: "আরিফ আজাদ",
+                price: 240,
+                oldPrice: 300,
+                image: "https://scontent.fdac190-1.fna.fbcdn.net/v/t39.30808-1/444487663_473076435248586_8270301554850071899_n.jpg?stp=dst-jpg_s200x200_tt6&_nc_cat=108&ccb=1-7&_nc_sid=1d2534&_nc_eui2=AeEduylGj6A1nV4j4mJrs9A9898WhjLMNlzz3xaGMsw2XJJU4yIFTQqoXCPxL5ZeqWb2H5hy8hhU0OhdTjrUkyDN&_nc_ohc=B7IuaZDtTHgQ7kNvwGqi2IN&_nc_oc=Adqe8JRSe6VTNp3u_blSR81FiiPe6PO2dZlomRhZ-6Z5gATatP8P0IKFxxD6_VLQLCI&_nc_zt=24&_nc_ht=scontent.fdac190-1.fna&_nc_gid=07OIiCsZeJIn08zJ-5rYZw&_nc_ss=7a3a8&oh=00_Af1igkeKRANNmIGPqv0f9FSkd2J541hQF_AG_d05tgVwCA&oe=69D588B4"
+            },
+            "himu-neelpoddo": {
+                title: "হিমুর হাতে কয়েকটি নীলপদ্ম",
+                author: "হুমায়ূন আহমেদ",
+                price: 180,
+                oldPrice: 230,
+                image: "https://scontent.fdac190-1.fna.fbcdn.net/v/t39.30808-6/533832210_122149491356791984_6719225686092712947_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=2a1932&_nc_eui2=AeFZEA4lH-V3yQ1CCnrlQ1CwkEjWPyMXn1SQSNY_IxefVDH7kfNhBNBGVtLiSVbyRgXksBf9wqXXAY-fs6yUQs1i&_nc_ohc=pI_-cnIoJoEQ7kNvwFtyueb&_nc_oc=AdrpDQen1HFawKzLR2jHuNw-xNjAZ5hjdZGbzNg1PRQPsxPI_dniDtzo_SL8KDxYqM4&_nc_zt=23&_nc_ht=scontent.fdac190-1.fna&_nc_gid=ZUDQP29JFIIRhG521mvCUw&_nc_ss=7a3a8&oh=00_Af1xjmyN6x6hntOiUM-fkXqIBFYi2VkPCyT88yJdiw11Ww&oe=69D59EE0"
+            },
+            "chouddogoshti": {
+                title: "প্রোগ্রামিংয়ের চৌদ্দগোষ্ঠী",
+                author: "ঝংকার মাহবুব",
+                price: 250,
+                oldPrice: 320,
+                image: "https://scontent.fdac190-1.fna.fbcdn.net/v/t39.30808-6/612608679_122182720874381463_2758780002660335582_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=107&ccb=1-7&_nc_sid=2a1932&_nc_eui2=AeGEKdmZu59w4k3a1_SI6tVaJzyOZyt8kXwnPI5nK3yRfPZAEwnmWl4BP6h5WhKi2ABZcY-zHE7vYlvwybeU6EVv&_nc_ohc=tDTmb9nTVl0Q7kNvwF7FvLa&_nc_oc=AdoDZUtQ9XSTqOdIIePbZz6fI936x7Q6rVwsgMl5WxVpVjucawnUnFDdaTrxtC1xJj8&_nc_zt=23&_nc_ht=scontent.fdac190-1.fna&_nc_gid=9w01qLXFAjrVJbx0nI7bBQ&_nc_ss=7a3a8&oh=00_Af1t4kQ_bemTWLWmP1x52AEk1NQgIV6hrtWWv7QH3aEiHQ&oe=69D5AC35"
+            },
+            "sample-1": { title: "নমুনা বই ১", author: "লেখক", price: 320, oldPrice: 400, image: "https://via.placeholder.com/320x420/1f1f1f/bdbdbd?text=Sample+Book+1" },
+            "sample-2": { title: "নমুনা বই ২", author: "লেখক", price: 285, oldPrice: 350, image: "https://via.placeholder.com/320x420/1f1f1f/bdbdbd?text=Sample+Book+2" },
+            "sample-3": { title: "নমুনা বই ৩", author: "লেখক", price: 199, oldPrice: 260, image: "https://via.placeholder.com/320x420/1f1f1f/bdbdbd?text=Sample+Book+3" },
+            "sample-4": { title: "নমুনা বই ৪", author: "লেখক", price: 150, oldPrice: 200, image: "https://via.placeholder.com/320x420/1f1f1f/bdbdbd?text=Sample+Book+4" }
         };
 
         // HINT: Weekly row-তে বই দেখাতে নিচের key গুলো দিন (key অবশ্যই BOOK_SOURCE এ থাকতে হবে)।
