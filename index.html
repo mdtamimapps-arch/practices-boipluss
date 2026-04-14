@@ -1126,7 +1126,7 @@
                 <p>নিচের ফিল্ডে তথ্য দিন। Add চাপলে বইটি <strong style="color:#ffcc80;">বাম থেকে ডানে</strong> ধারাবাহিকভাবে Weekly row-তে যুক্ত হবে।</p>
                 <div id="weeklyLockMsg" class="notice-lock-msg">
                     👁 Weekly row সবাই <strong>দেখতে</strong> পারবে। বই <strong>শুধু Tamim</strong> যোগ/মুছতে পারবে।
-                    <button type="button" id="weeklyUnlockBtn" class="weekly-add-btn" style="margin-top:10px;">Tamim Unlock</button>
+                    Weekly add/remove করতে উপরের <strong>লগইন (Admin)</strong> দিয়ে Tamim account-এ login করুন।
                 </div>
                 <div id="weeklyEditorWrap" hidden>
                     <form id="weeklyBookForm">
@@ -1414,7 +1414,6 @@
         const NOTICE_EDITOR_USER = "tamim";
         const WEEKLY_EDITOR_USER = "tamim";
         let currentAdminUser = null;
-        let weeklyEditUnlocked = false;
         let weeklyAuthToken = localStorage.getItem(WEEKLY_TOKEN_STORAGE_KEY) || "";
 
         const modal = document.getElementById("loginModal");
@@ -1497,7 +1496,7 @@
         }
 
         function canEditWeeklyBooks() {
-            return currentAdminUser === WEEKLY_EDITOR_USER || weeklyEditUnlocked;
+            return currentAdminUser === WEEKLY_EDITOR_USER && !!weeklyAuthToken;
         }
 
         async function apiRequest(path, options) {
@@ -1528,49 +1527,21 @@
             try {
                 const me = await apiRequest("/auth/me");
                 if (me && me.username === WEEKLY_EDITOR_USER) {
-                    weeklyEditUnlocked = true;
                     currentAdminUser = WEEKLY_EDITOR_USER;
                     return true;
                 }
             } catch {
                 setWeeklyToken("");
             }
-            weeklyEditUnlocked = false;
             return false;
         }
 
         function applyWeeklyEditorUI() {
             const editorWrap = document.getElementById("weeklyEditorWrap");
             const lockMsg = document.getElementById("weeklyLockMsg");
-            const unlockBtn = document.getElementById("weeklyUnlockBtn");
             const canEdit = canEditWeeklyBooks();
             if (editorWrap) editorWrap.hidden = !canEdit;
             if (lockMsg) lockMsg.hidden = canEdit;
-            if (unlockBtn) unlockBtn.hidden = canEdit;
-        }
-
-        async function unlockWeeklyEditor() {
-            const user = (window.prompt("Weekly add করতে username দিন:") || "").trim().toLowerCase();
-            const pass = (window.prompt("পাসওয়ার্ড দিন:") || "").trim();
-            if (!user || !pass) return;
-            try {
-                const data = await apiRequest("/auth/login", {
-                    method: "POST",
-                    body: JSON.stringify({ username: user, password: pass })
-                });
-                setWeeklyToken(data.token || "");
-                weeklyEditUnlocked = true;
-                currentAdminUser = data.username || user;
-                applyWeeklyEditorUI();
-                await renderWeeklyAddedList();
-                alert("Weekly editor unlock হয়েছে। এখন বই add/remove করতে পারবেন।");
-                return;
-            } catch (err) {
-                setWeeklyToken("");
-                weeklyEditUnlocked = false;
-                applyWeeklyEditorUI();
-                alert((err && err.message) ? err.message : "ভুল credential. শুধু Tamim Weekly বই add করতে পারবে।");
-            }
         }
 
         function applyNoticeEditorUI() {
@@ -1671,7 +1642,7 @@
         function openLogin() { modal.style.display = "block"; }
         function closeLogin() { modal.style.display = "none"; }
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const userBox = document.getElementById("username").value.trim().toLowerCase();
             const passBox = document.getElementById("password").value.trim();
@@ -1679,17 +1650,35 @@
             if (adminData[userBox] && adminData[userBox] === passBox) {
                 closeLogin();
                 currentAdminUser = userBox;
-                mainWeb.style.display = "none";
-                dashBoard.style.display = "block";
-                document.getElementById("logged-user").innerText = userBox.toUpperCase();
-                window.scrollTo(0, 0);
-                if (userBox === WEEKLY_EDITOR_USER && weeklyAuthToken) {
-                    weeklyEditUnlocked = true;
+                if (userBox === WEEKLY_EDITOR_USER) {
+                    try {
+                        const authData = await apiRequest("/auth/login", {
+                            method: "POST",
+                            body: JSON.stringify({ username: userBox, password: passBox })
+                        });
+                        setWeeklyToken(authData.token || "");
+                    } catch (err) {
+                        setWeeklyToken("");
+                        alert((err && err.message) ? err.message : "Weekly editor login failed");
+                        return;
+                    }
+                    dashBoard.style.display = "none";
+                    mainWeb.style.display = "block";
+                    applyWeeklyEditorUI();
+                    await populateWeeklyRow();
+                    await renderWeeklyAddedList();
+                    const weeklySection = document.getElementById("weekly-ebook");
+                    if (weeklySection) weeklySection.scrollIntoView({ behavior: "smooth", block: "start" });
+                    alert("Tamim login সফল। এখন Weekly বই add/remove করতে পারবেন।");
+                } else {
+                    setWeeklyToken("");
+                    mainWeb.style.display = "none";
+                    dashBoard.style.display = "block";
+                    document.getElementById("logged-user").innerText = userBox.toUpperCase();
+                    window.scrollTo(0, 0);
+                    applyNoticeEditorUI();
+                    renderNotices();
                 }
-                applyNoticeEditorUI();
-                applyWeeklyEditorUI();
-                renderNotices();
-                renderWeeklyAddedList();
             } else {
                 alert("ভুল নাম বা পাসওয়ার্ড! মামুর বেটা কি দিয়েছিস 😁😀");
             }
@@ -1697,7 +1686,6 @@
 
         function logout() {
             currentAdminUser = null;
-            weeklyEditUnlocked = false;
             setWeeklyToken("");
             dashBoard.style.display = "none";
             mainWeb.style.display = "block";
@@ -2054,10 +2042,6 @@
         const weeklyBookForm = document.getElementById("weeklyBookForm");
         if (weeklyBookForm) {
             weeklyBookForm.addEventListener("submit", addWeeklyCustomBook);
-        }
-        const weeklyUnlockBtn = document.getElementById("weeklyUnlockBtn");
-        if (weeklyUnlockBtn) {
-            weeklyUnlockBtn.addEventListener("click", unlockWeeklyEditor);
         }
 
         (function initScrollFab() {
