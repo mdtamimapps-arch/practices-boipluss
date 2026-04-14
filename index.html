@@ -1391,7 +1391,8 @@
     <script>
         const NOTICE_STORAGE_KEY = "boiPlusInternalNotices";
         const VIEW_MODE_KEY = "boiPlusViewMode";
-        const WEEKLY_CUSTOM_STORAGE_KEY = "boiPlusWeeklyCustomBooks";
+        const API_BASE_URL = "http://localhost:3000/api";
+        const WEEKLY_TOKEN_STORAGE_KEY = "boiPlusWeeklyEditorToken";
         const DEFAULT_NOTICES = [
             { id: "def-1", title: "মিটিং", body: "মিটিং রাত ৯ টায়।", isDefault: true },
             { id: "def-2", title: "চাঁদা", body: "সাপ্তাহিক চাঁদা জমা দিন।", isDefault: true },
@@ -1410,6 +1411,7 @@
         const WEEKLY_EDITOR_USER = "tamim";
         let currentAdminUser = null;
         let weeklyEditUnlocked = false;
+        let weeklyAuthToken = localStorage.getItem(WEEKLY_TOKEN_STORAGE_KEY) || "";
 
         const modal = document.getElementById("loginModal");
         const mainWeb = document.getElementById("main-website");
@@ -1494,6 +1496,45 @@
             return currentAdminUser === WEEKLY_EDITOR_USER || weeklyEditUnlocked;
         }
 
+        async function apiRequest(path, options) {
+            const opts = options || {};
+            const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
+            if (weeklyAuthToken) {
+                headers.Authorization = "Bearer " + weeklyAuthToken;
+            }
+            const res = await fetch(API_BASE_URL + path, Object.assign({}, opts, { headers: headers }));
+            const data = await res.json().catch(function () { return {}; });
+            if (!res.ok) {
+                throw new Error(data.error || "Server request failed");
+            }
+            return data;
+        }
+
+        function setWeeklyToken(token) {
+            weeklyAuthToken = token || "";
+            if (weeklyAuthToken) {
+                localStorage.setItem(WEEKLY_TOKEN_STORAGE_KEY, weeklyAuthToken);
+            } else {
+                localStorage.removeItem(WEEKLY_TOKEN_STORAGE_KEY);
+            }
+        }
+
+        async function restoreWeeklySession() {
+            if (!weeklyAuthToken) return false;
+            try {
+                const me = await apiRequest("/auth/me");
+                if (me && me.username === WEEKLY_EDITOR_USER) {
+                    weeklyEditUnlocked = true;
+                    currentAdminUser = WEEKLY_EDITOR_USER;
+                    return true;
+                }
+            } catch {
+                setWeeklyToken("");
+            }
+            weeklyEditUnlocked = false;
+            return false;
+        }
+
         function applyWeeklyEditorUI() {
             const editorWrap = document.getElementById("weeklyEditorWrap");
             const lockMsg = document.getElementById("weeklyLockMsg");
@@ -1504,18 +1545,28 @@
             if (unlockBtn) unlockBtn.hidden = canEdit;
         }
 
-        function unlockWeeklyEditor() {
+        async function unlockWeeklyEditor() {
             const user = (window.prompt("Weekly add করতে username দিন:") || "").trim().toLowerCase();
             const pass = (window.prompt("পাসওয়ার্ড দিন:") || "").trim();
-            if (user === WEEKLY_EDITOR_USER && adminData[user] === pass) {
+            if (!user || !pass) return;
+            try {
+                const data = await apiRequest("/auth/login", {
+                    method: "POST",
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+                setWeeklyToken(data.token || "");
                 weeklyEditUnlocked = true;
-                currentAdminUser = user;
+                currentAdminUser = data.username || user;
                 applyWeeklyEditorUI();
-                renderWeeklyAddedList();
+                await renderWeeklyAddedList();
                 alert("Weekly editor unlock হয়েছে। এখন বই add/remove করতে পারবেন।");
                 return;
+            } catch (err) {
+                setWeeklyToken("");
+                weeklyEditUnlocked = false;
+                applyWeeklyEditorUI();
+                alert((err && err.message) ? err.message : "ভুল credential. শুধু Tamim Weekly বই add করতে পারবে।");
             }
-            alert("ভুল credential. শুধু Tamim Weekly বই add করতে পারবে।");
         }
 
         function applyNoticeEditorUI() {
@@ -1628,6 +1679,9 @@
                 dashBoard.style.display = "block";
                 document.getElementById("logged-user").innerText = userBox.toUpperCase();
                 window.scrollTo(0, 0);
+                if (userBox === WEEKLY_EDITOR_USER && weeklyAuthToken) {
+                    weeklyEditUnlocked = true;
+                }
                 applyNoticeEditorUI();
                 applyWeeklyEditorUI();
                 renderNotices();
@@ -1640,6 +1694,7 @@
         function logout() {
             currentAdminUser = null;
             weeklyEditUnlocked = false;
+            setWeeklyToken("");
             dashBoard.style.display = "none";
             mainWeb.style.display = "block";
             applyWeeklyEditorUI();
@@ -1813,25 +1868,24 @@
             }).filter(Boolean);
         }
 
-        function loadWeeklyCustomBooks() {
+        let weeklyCustomBooksCache = [];
+
+        async function loadWeeklyCustomBooks() {
             try {
-                const raw = localStorage.getItem(WEEKLY_CUSTOM_STORAGE_KEY);
-                if (!raw) return [];
-                const parsed = JSON.parse(raw);
-                return Array.isArray(parsed) ? parsed : [];
+                const data = await apiRequest("/weekly-books");
+                const books = Array.isArray(data.books) ? data.books : [];
+                weeklyCustomBooksCache = books;
+                return books;
             } catch {
+                weeklyCustomBooksCache = [];
                 return [];
             }
         }
 
-        function saveWeeklyCustomBooks(list) {
-            localStorage.setItem(WEEKLY_CUSTOM_STORAGE_KEY, JSON.stringify(list || []));
-        }
-
-        function renderWeeklyAddedList() {
+        async function renderWeeklyAddedList() {
             const listBox = document.getElementById("weeklyAddedList");
             if (!listBox) return;
-            const items = loadWeeklyCustomBooks();
+            const items = await loadWeeklyCustomBooks();
             const editor = canEditWeeklyBooks();
             if (!items.length) {
                 listBox.innerHTML = "<span class='weekly-added-chip'>কোনো কাস্টম বই যোগ করা হয়নি</span>";
@@ -1852,7 +1906,7 @@
             }
         }
 
-        function addWeeklyCustomBook(e) {
+        async function addWeeklyCustomBook(e) {
             e.preventDefault();
             if (!canEditWeeklyBooks()) {
                 alert("Weekly বই যোগ করার অনুমতি শুধু Tamim এর।");
@@ -1875,42 +1929,47 @@
                 return;
             }
 
-            const list = loadWeeklyCustomBooks();
-            list.push({
-                id: "wc-" + Date.now() + "-" + Math.random().toString(36).slice(-5),
-                title: title,
-                author: author,
-                price: price,
-                oldPrice: oldPrice > price ? oldPrice : 0,
-                image: image
-            });
-            saveWeeklyCustomBooks(list);
-            e.target.reset();
-            populateWeeklyRow();
-            renderWeeklyAddedList();
+            try {
+                await apiRequest("/weekly-books", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        title: title,
+                        author: author,
+                        price: price,
+                        oldPrice: oldPrice,
+                        image: image
+                    })
+                });
+                e.target.reset();
+                await populateWeeklyRow();
+                await renderWeeklyAddedList();
+            } catch (err) {
+                alert((err && err.message) ? err.message : "বই যোগ করা যায়নি।");
+            }
         }
 
-        function removeWeeklyCustomBook(id) {
+        async function removeWeeklyCustomBook(id) {
             if (!canEditWeeklyBooks()) {
                 alert("Weekly বই মুছার অনুমতি শুধু Tamim এর।");
                 return;
             }
             if (!id) return;
-            const next = loadWeeklyCustomBooks().filter(function (item) {
-                return item.id !== id;
-            });
-            saveWeeklyCustomBooks(next);
-            populateWeeklyRow();
-            renderWeeklyAddedList();
+            try {
+                await apiRequest("/weekly-books/" + encodeURIComponent(id), { method: "DELETE" });
+                await populateWeeklyRow();
+                await renderWeeklyAddedList();
+            } catch (err) {
+                alert((err && err.message) ? err.message : "বই মুছা যায়নি।");
+            }
         }
 
-        function populateWeeklyRow() {
+        async function populateWeeklyRow() {
             const row = document.getElementById("weekly-scroll");
             if (!row) return;
             // HINT: WEEKLY_BOOK_KEYS খালি থাকলে auto non-sample books দেখাবে।
             const weeklyKeys = (WEEKLY_BOOK_KEYS && WEEKLY_BOOK_KEYS.length) ? WEEKLY_BOOK_KEYS : getAutoBookKeys();
             const baseBooks = resolveBooksFromKeys(weeklyKeys);
-            const customBooks = loadWeeklyCustomBooks();
+            const customBooks = await loadWeeklyCustomBooks();
             const books = baseBooks.concat(customBooks);
             row.innerHTML = books.map(function (item) { return buildMiniCard(item); }).join("");
         }
@@ -1980,10 +2039,13 @@
 
         initViewMode();
         renderCategoryCloud();
-        populateWeeklyRow();
         populateCategoryRows();
-        applyWeeklyEditorUI();
-        renderWeeklyAddedList();
+        (async function initWeeklyArea() {
+            await restoreWeeklySession();
+            applyWeeklyEditorUI();
+            await populateWeeklyRow();
+            await renderWeeklyAddedList();
+        })();
 
         const weeklyBookForm = document.getElementById("weeklyBookForm");
         if (weeklyBookForm) {
