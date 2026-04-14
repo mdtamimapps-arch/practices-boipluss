@@ -342,7 +342,8 @@
         .weekly-form-grid .full {
             grid-column: 1 / -1;
         }
-        .weekly-form-grid input {
+        .weekly-form-grid input,
+        .weekly-form-grid select {
             width: 100%;
             min-height: 40px;
             padding: 10px 11px;
@@ -353,7 +354,8 @@
             font-family: inherit;
             font-size: 14px;
         }
-        .weekly-form-grid input:focus {
+        .weekly-form-grid input:focus,
+        .weekly-form-grid select:focus {
             outline: none;
             border-color: rgba(59, 224, 195, 0.85);
             box-shadow: 0 0 0 2px rgba(59, 224, 195, 0.16);
@@ -397,6 +399,7 @@
             font-size: 12px;
             padding: 5px 9px;
         }
+        .weekly-added-chip input[type="checkbox"] { accent-color: #81c784; }
         .weekly-added-chip button {
             border: none;
             background: transparent;
@@ -1146,12 +1149,19 @@
                             <input id="weeklyBookAuthor" type="text" placeholder="লেখক (যেমন: তামীম)" required>
                             <input id="weeklyBookPrice" type="number" min="1" placeholder="ফ্রী (৳)" required>
                             <input id="weeklyBookOldPrice" type="number" min="0" placeholder="১০০০০ (৳)">
+                            <select id="weeklyCategoryTarget" class="full" required>
+                                <option value="weekly">Weekly row</option>
+                                <option value="all-categories">সব category</option>
+                                <option value="new-category">+ নতুন category তৈরি</option>
+                            </select>
+                            <input id="weeklyNewCategoryName" class="full" type="text" placeholder="নতুন category নাম লিখুন" hidden>
                             <input id="weeklyBookImage" class="full" type="url" placeholder="https://rokbucket.rokomari.io/ProductNew20190903/130X186/Qurane_Adhunik_Biggan-Professor_Muhammod_Hamidur_Rahman-f5d2d-210240.jpg">
                         </div>
                         <button type="submit" class="weekly-add-btn">+ Weekly Row-তে যোগ করুন</button>
                     </form>
                 </div>
                 <div id="weeklyAddedList" class="weekly-added-list"></div>
+                <button type="button" id="weeklyRemoveSelectedBtn" class="weekly-add-btn" style="margin-top:8px;" hidden>✓ Mark করা বইগুলো Remove করুন</button>
                 <div id="weeklySyncStatus" class="weekly-sync-status" aria-live="polite"></div>
             </div>
         </section>
@@ -1694,11 +1704,25 @@
                 closeLogin();
                 currentAdminUser = userBox;
                 if (isWeeklyEditorUser(userBox)) {
+                    try {
+                        const authData = await apiRequest("/auth/login", {
+                            method: "POST",
+                            body: JSON.stringify({ username: userBox, password: passBox })
+                        });
+                        setWeeklyToken(authData.token || "");
+                    } catch (err) {
+                        setWeeklyToken("");
+                        alert((err && err.message) ? err.message : "Login failed");
+                        return;
+                    }
                     localStorage.setItem(WEEKLY_LOCAL_EDITOR_KEY, userBox);
                     dashBoard.style.display = "none";
                     mainWeb.style.display = "block";
                     applyWeeklyEditorUI();
+                    await loadCustomCatalogData();
+                    refreshCategoryTargetOptions();
                     await populateWeeklyRow();
+                    populateCategoryRows();
                     await renderWeeklyAddedList();
                     const weeklySection = document.getElementById("weekly-ebook");
                     if (weeklySection) weeklySection.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1903,118 +1927,8 @@
             }).filter(Boolean);
         }
 
-        let weeklyCustomBooksCache = [];
-
-        async function loadWeeklyCustomBooks() {
-            try {
-                const data = await apiRequest("/weekly-books");
-                const books = Array.isArray(data.books) ? data.books : [];
-                weeklyCustomBooksCache = books;
-                return books;
-            } catch {
-                weeklyCustomBooksCache = [];
-                return [];
-            }
-        }
-
-        async function renderWeeklyAddedList() {
-            const listBox = document.getElementById("weeklyAddedList");
-            if (!listBox) return;
-            const items = await loadWeeklyCustomBooks();
-            const editor = canEditWeeklyBooks();
-            if (!items.length) {
-                listBox.innerHTML = "<span class='weekly-added-chip'>কোনো কাস্টম বই যোগ করা হয়নি</span>";
-                return;
-            }
-            listBox.innerHTML = items.map(function (item) {
-                const title = escapeHtml(item.title || "বই");
-                const id = escapeHtml(item.id || "");
-                const removeBtn = editor ? ' <button type="button" data-weekly-del="' + id + '" aria-label="মুছুন">✕</button>' : "";
-                return '<span class="weekly-added-chip">' + title + removeBtn + "</span>";
-            }).join("");
-            if (editor) {
-                listBox.querySelectorAll("[data-weekly-del]").forEach(function (btn) {
-                    btn.addEventListener("click", function () {
-                        removeWeeklyCustomBook(this.getAttribute("data-weekly-del"));
-                    });
-                });
-            }
-        }
-
-        async function addWeeklyCustomBook(e) {
-            e.preventDefault();
-            if (!canEditWeeklyBooks()) {
-                alert("Weekly বই যোগ করার অনুমতি শুধু Tamim এর।");
-                return;
-            }
-            const titleEl = document.getElementById("weeklyBookTitle");
-            const authorEl = document.getElementById("weeklyBookAuthor");
-            const priceEl = document.getElementById("weeklyBookPrice");
-            const oldPriceEl = document.getElementById("weeklyBookOldPrice");
-            const imageEl = document.getElementById("weeklyBookImage");
-            if (!titleEl || !authorEl || !priceEl || !oldPriceEl || !imageEl) return;
-
-            const title = titleEl.value.trim();
-            const author = authorEl.value.trim();
-            const price = Number(priceEl.value);
-            const oldPrice = Number(oldPriceEl.value || 0);
-            const image = imageEl.value.trim();
-            if (!title || !author || !price || price < 1) {
-                alert("বইয়ের নাম, লেখক এবং সঠিক দাম দিন।");
-                return;
-            }
-
-            try {
-                await apiRequest("/weekly-books", {
-                    method: "POST",
-                    body: JSON.stringify({
-                        title: title,
-                        author: author,
-                        price: price,
-                        oldPrice: oldPrice,
-                        image: image
-                    })
-                });
-                e.target.reset();
-                await populateWeeklyRow();
-                await renderWeeklyAddedList();
-                showWeeklySyncStatus("Code Sync Successful - Weekly বই code-এ save হয়েছে।", "ok");
-            } catch (err) {
-                showWeeklySyncStatus("Code Sync Failed - server sync হয়নি।", "err");
-                alert((err && err.message) ? err.message : "বই যোগ করা যায়নি। backend চালু করুন (npm start)");
-            }
-        }
-
-        async function removeWeeklyCustomBook(id) {
-            if (!canEditWeeklyBooks()) {
-                alert("Weekly বই মুছার অনুমতি শুধু Tamim এর।");
-                return;
-            }
-            if (!id) return;
-            try {
-                await apiRequest("/weekly-books/" + encodeURIComponent(id), { method: "DELETE" });
-                await populateWeeklyRow();
-                await renderWeeklyAddedList();
-                showWeeklySyncStatus("Code Sync Successful - বই remove update code-এ save হয়েছে।", "ok");
-            } catch (err) {
-                showWeeklySyncStatus("Code Sync Failed - remove sync হয়নি।", "err");
-                alert((err && err.message) ? err.message : "বই মুছা যায়নি। backend চালু করুন (npm start)");
-            }
-        }
-
-        async function populateWeeklyRow() {
-            const row = document.getElementById("weekly-scroll");
-            if (!row) return;
-            // HINT: WEEKLY_BOOK_KEYS খালি থাকলে auto non-sample books দেখাবে।
-            const weeklyKeys = (WEEKLY_BOOK_KEYS && WEEKLY_BOOK_KEYS.length) ? WEEKLY_BOOK_KEYS : getAutoBookKeys();
-            const baseBooks = resolveBooksFromKeys(weeklyKeys);
-            const customBooks = await loadWeeklyCustomBooks();
-            const books = baseBooks.concat(customBooks);
-            row.innerHTML = books.map(function (item) { return buildMiniCard(item); }).join("");
-        }
-
         // HINT: নতুন ক্যাটাগরি রো যোগ করতে নিচে নতুন object দিন: { title: "ক্যাটাগরি নাম", slug: "unique-slug" }
-        const CATEGORY_ROW_DEFS = [
+        const DEFAULT_CATEGORY_ROW_DEFS = [
             { title: "ইসলামি বই", slug: "islam" },
             { title: "উপন্যাস", slug: "novel" },
             { title: "ভর্তি ও প্রস্তুতি পরীক্ষা", slug: "admission" },
@@ -2032,7 +1946,7 @@
         // HINT: প্রতিটি category row-তে কোন বই দেখাবেন সেটা slug ধরে এখানে key list দিয়ে দিন।
         // Example: islam: ["paradoxical-sajid", "new-book-key", ...]
         // যদি কোনো slug এ list না দেন/খালি রাখেন, auto non-sample books দেখাবে।
-        const CATEGORY_BOOK_KEYS = {
+        const DEFAULT_CATEGORY_BOOK_KEYS = {
             islam: ["sample-1", "sample-2", "sample-3", "sample-4"],
             novel: ["sample-1", "sample-2", "sample-3", "sample-4"],
             admission: ["sample-1", "sample-2", "sample-3", "sample-4"],
@@ -2047,15 +1961,254 @@
             hist: ["sample-1", "sample-2", "sample-3", "sample-4"]
         };
 
+        let customCatalogData = {
+            weeklyBooks: [],
+            categoryDefs: [],
+            categoryCustomBooks: {}
+        };
+
+        function normalizeCustomCatalogData(raw) {
+            const base = raw && typeof raw === "object" ? raw : {};
+            const weeklyBooks = Array.isArray(base.weeklyBooks) ? base.weeklyBooks : [];
+            const categoryDefs = Array.isArray(base.categoryDefs) ? base.categoryDefs : [];
+            const categoryCustomBooks = base.categoryCustomBooks && typeof base.categoryCustomBooks === "object"
+                ? base.categoryCustomBooks
+                : {};
+            return { weeklyBooks, categoryDefs, categoryCustomBooks };
+        }
+
+        function getCombinedCategoryDefs() {
+            const seen = new Set();
+            const rows = [];
+            DEFAULT_CATEGORY_ROW_DEFS.concat(customCatalogData.categoryDefs || []).forEach(function (item) {
+                if (!item || !item.slug || seen.has(item.slug)) return;
+                seen.add(item.slug);
+                rows.push(item);
+            });
+            return rows;
+        }
+
+        function slugifyCategoryName(name) {
+            return String(name || "")
+                .toLowerCase()
+                .replace(/[^a-z0-9\u0980-\u09ff]+/g, "-")
+                .replace(/^-+|-+$/g, "")
+                .slice(0, 48);
+        }
+
+        async function loadCustomCatalogData() {
+            try {
+                const data = await apiRequest("/custom-data");
+                customCatalogData = normalizeCustomCatalogData(data);
+            } catch {
+                customCatalogData = normalizeCustomCatalogData({});
+            }
+            return customCatalogData;
+        }
+
+        async function saveCustomCatalogData() {
+            await apiRequest("/custom-data", {
+                method: "PUT",
+                body: JSON.stringify(customCatalogData)
+            });
+        }
+
+        function refreshCategoryTargetOptions() {
+            const select = document.getElementById("weeklyCategoryTarget");
+            if (!select) return;
+            const current = select.value;
+            const dynamic = getCombinedCategoryDefs().map(function (def) {
+                return '<option value="' + def.slug + '">' + escapeHtml(def.title) + "</option>";
+            }).join("");
+            select.innerHTML =
+                '<option value="weekly">Weekly row</option>' +
+                '<option value="all-categories">সব category</option>' +
+                dynamic +
+                '<option value="new-category">+ নতুন category তৈরি</option>';
+            if (current && select.querySelector('option[value="' + current + '"]')) {
+                select.value = current;
+            }
+        }
+
+        function getAllCustomBooksGroupedById() {
+            const map = new Map();
+            function add(item, where) {
+                if (!item || !item.id) return;
+                if (!map.has(item.id)) {
+                    map.set(item.id, { item: item, targets: new Set() });
+                }
+                map.get(item.id).targets.add(where);
+            }
+            (customCatalogData.weeklyBooks || []).forEach(function (item) { add(item, "weekly"); });
+            Object.keys(customCatalogData.categoryCustomBooks || {}).forEach(function (slug) {
+                (customCatalogData.categoryCustomBooks[slug] || []).forEach(function (item) { add(item, slug); });
+            });
+            return Array.from(map.values());
+        }
+
+        async function renderWeeklyAddedList() {
+            const listBox = document.getElementById("weeklyAddedList");
+            const removeBtn = document.getElementById("weeklyRemoveSelectedBtn");
+            if (!listBox) return;
+            const editor = canEditWeeklyBooks();
+            const grouped = getAllCustomBooksGroupedById();
+            if (!grouped.length) {
+                listBox.innerHTML = "<span class='weekly-added-chip'>কোনো কাস্টম বই যোগ করা হয়নি</span>";
+                if (removeBtn) removeBtn.hidden = true;
+                return;
+            }
+            listBox.innerHTML = grouped.map(function (entry) {
+                const title = escapeHtml(entry.item.title || "বই");
+                const id = escapeHtml(entry.item.id || "");
+                const targetText = escapeHtml(Array.from(entry.targets).join(", "));
+                const mark = editor ? '<input type="checkbox" data-weekly-mark="' + id + '">' : "";
+                return '<label class="weekly-added-chip">' + mark + " " + title + " <small>(" + targetText + ")</small></label>";
+            }).join("");
+            if (removeBtn) removeBtn.hidden = !editor;
+        }
+
+        function ensureCategoryDef(slug, title) {
+            if (!slug) return;
+            const existsDefault = DEFAULT_CATEGORY_ROW_DEFS.some(function (d) { return d.slug === slug; });
+            const existsCustom = (customCatalogData.categoryDefs || []).some(function (d) { return d.slug === slug; });
+            if (!existsDefault && !existsCustom) {
+                (customCatalogData.categoryDefs || []).push({ title: title || slug, slug: slug });
+            }
+            if (!customCatalogData.categoryCustomBooks[slug]) {
+                customCatalogData.categoryCustomBooks[slug] = [];
+            }
+        }
+
+        function addBookToTargets(baseBook, targetValue, newCategoryName) {
+            const allDefs = getCombinedCategoryDefs();
+            if (targetValue === "all-categories") {
+                customCatalogData.weeklyBooks.push(baseBook);
+                allDefs.forEach(function (def) {
+                    ensureCategoryDef(def.slug, def.title);
+                    customCatalogData.categoryCustomBooks[def.slug].push(Object.assign({}, baseBook));
+                });
+                return;
+            }
+            if (targetValue === "weekly") {
+                customCatalogData.weeklyBooks.push(baseBook);
+                return;
+            }
+            if (targetValue === "new-category") {
+                const newName = String(newCategoryName || "").trim();
+                const slug = slugifyCategoryName(newName);
+                if (!slug || !newName) {
+                    throw new Error("নতুন category নাম দিন।");
+                }
+                ensureCategoryDef(slug, newName);
+                customCatalogData.categoryCustomBooks[slug].push(baseBook);
+                return;
+            }
+            ensureCategoryDef(targetValue, targetValue);
+            customCatalogData.categoryCustomBooks[targetValue].push(baseBook);
+        }
+
+        async function addWeeklyCustomBook(e) {
+            e.preventDefault();
+            if (!canEditWeeklyBooks()) {
+                alert("Weekly বই যোগ করার অনুমতি শুধু Tamim এর।");
+                return;
+            }
+            const titleEl = document.getElementById("weeklyBookTitle");
+            const authorEl = document.getElementById("weeklyBookAuthor");
+            const priceEl = document.getElementById("weeklyBookPrice");
+            const oldPriceEl = document.getElementById("weeklyBookOldPrice");
+            const imageEl = document.getElementById("weeklyBookImage");
+            const targetEl = document.getElementById("weeklyCategoryTarget");
+            const newCatEl = document.getElementById("weeklyNewCategoryName");
+            if (!titleEl || !authorEl || !priceEl || !oldPriceEl || !imageEl || !targetEl || !newCatEl) return;
+
+            const title = titleEl.value.trim();
+            const author = authorEl.value.trim();
+            const price = Number(priceEl.value);
+            const oldPrice = Number(oldPriceEl.value || 0);
+            const image = imageEl.value.trim();
+            const targetValue = targetEl.value;
+            const newCategoryName = newCatEl.value.trim();
+            if (!title || !author || !price || price < 1) {
+                alert("বইয়ের নাম, লেখক এবং সঠিক দাম দিন।");
+                return;
+            }
+
+            const newBook = {
+                id: "wc-" + Date.now() + "-" + Math.random().toString(36).slice(-5),
+                title: title,
+                author: author,
+                price: price,
+                oldPrice: oldPrice > price ? oldPrice : 0,
+                image: image
+            };
+            try {
+                addBookToTargets(newBook, targetValue, newCategoryName);
+                await saveCustomCatalogData();
+                e.target.reset();
+                refreshCategoryTargetOptions();
+                await populateWeeklyRow();
+                populateCategoryRows();
+                await renderWeeklyAddedList();
+                showWeeklySyncStatus("Code Sync Successful - বই category সহ code-এ save হয়েছে।", "ok");
+            } catch (err) {
+                showWeeklySyncStatus("Code Sync Failed - server sync হয়নি।", "err");
+                alert((err && err.message) ? err.message : "বই যোগ করা যায়নি।");
+            }
+        }
+
+        async function removeMarkedCustomBooks() {
+            if (!canEditWeeklyBooks()) return;
+            const marked = Array.from(document.querySelectorAll("[data-weekly-mark]:checked")).map(function (el) {
+                return el.getAttribute("data-weekly-mark");
+            }).filter(Boolean);
+            if (!marked.length) {
+                alert("আগে mark করুন, তারপর remove দিন।");
+                return;
+            }
+            const markSet = new Set(marked);
+            customCatalogData.weeklyBooks = (customCatalogData.weeklyBooks || []).filter(function (item) {
+                return !markSet.has(item.id);
+            });
+            Object.keys(customCatalogData.categoryCustomBooks || {}).forEach(function (slug) {
+                customCatalogData.categoryCustomBooks[slug] = (customCatalogData.categoryCustomBooks[slug] || []).filter(function (item) {
+                    return !markSet.has(item.id);
+                });
+            });
+            try {
+                await saveCustomCatalogData();
+                await populateWeeklyRow();
+                populateCategoryRows();
+                await renderWeeklyAddedList();
+                showWeeklySyncStatus("Code Sync Successful - mark করা বইগুলো remove হয়েছে।", "ok");
+            } catch (err) {
+                showWeeklySyncStatus("Code Sync Failed - remove sync হয়নি।", "err");
+                alert((err && err.message) ? err.message : "বই remove করা যায়নি।");
+            }
+        }
+
+        async function populateWeeklyRow() {
+            const row = document.getElementById("weekly-scroll");
+            if (!row) return;
+            const weeklyKeys = (WEEKLY_BOOK_KEYS && WEEKLY_BOOK_KEYS.length) ? WEEKLY_BOOK_KEYS : getAutoBookKeys();
+            const baseBooks = resolveBooksFromKeys(weeklyKeys);
+            const customBooks = customCatalogData.weeklyBooks || [];
+            const books = baseBooks.concat(customBooks);
+            row.innerHTML = books.map(function (item) { return buildMiniCard(item); }).join("");
+        }
+
         function populateCategoryRows() {
             const host = document.getElementById("category-rows");
             if (!host) return;
             const autoKeys = getAutoBookKeys();
-            host.innerHTML = CATEGORY_ROW_DEFS.map(function (def) {
+            const rowDefs = getCombinedCategoryDefs();
+            host.innerHTML = rowDefs.map(function (def) {
                 const sid = def.sectionId ? def.sectionId : "cat-row-" + def.slug;
-                const configured = CATEGORY_BOOK_KEYS[def.slug];
+                const configured = DEFAULT_CATEGORY_BOOK_KEYS[def.slug];
                 const keys = (configured && configured.length) ? configured : autoKeys;
-                const cards = resolveBooksFromKeys(keys).map(function (item) {
+                const baseCards = resolveBooksFromKeys(keys);
+                const customCards = customCatalogData.categoryCustomBooks[def.slug] || [];
+                const cards = baseCards.concat(customCards).map(function (item) {
                     return buildMiniCard(item);
                 }).join("");
                 return (
@@ -2081,14 +2234,29 @@
         populateCategoryRows();
         (async function initWeeklyArea() {
             await restoreWeeklySession();
+            await loadCustomCatalogData();
             applyWeeklyEditorUI();
+            refreshCategoryTargetOptions();
             await populateWeeklyRow();
+            populateCategoryRows();
             await renderWeeklyAddedList();
         })();
 
         const weeklyBookForm = document.getElementById("weeklyBookForm");
         if (weeklyBookForm) {
             weeklyBookForm.addEventListener("submit", addWeeklyCustomBook);
+        }
+        const weeklyRemoveSelectedBtn = document.getElementById("weeklyRemoveSelectedBtn");
+        if (weeklyRemoveSelectedBtn) {
+            weeklyRemoveSelectedBtn.addEventListener("click", removeMarkedCustomBooks);
+        }
+        const weeklyCategoryTarget = document.getElementById("weeklyCategoryTarget");
+        const weeklyNewCategoryName = document.getElementById("weeklyNewCategoryName");
+        if (weeklyCategoryTarget && weeklyNewCategoryName) {
+            weeklyCategoryTarget.addEventListener("change", function () {
+                weeklyNewCategoryName.hidden = this.value !== "new-category";
+                weeklyNewCategoryName.required = this.value === "new-category";
+            });
         }
 
         (function initScrollFab() {
