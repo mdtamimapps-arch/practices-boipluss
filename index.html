@@ -1949,6 +1949,14 @@
         // image URL কাজ না করলে placeholder দেখাবে (onerror fallback add করা আছে)।
         // ===========================
         // HINT: সব mini row (Weekly + Category) এর বই এক জায়গা থেকে edit করতে চাইলে নিচে title/author/price/oldPrice/image বদলান।
+        // CODE ADD TEMPLATE (Rokomari style):
+        // "your-book-key": {
+        //   title: "বইয়ের নাম",
+        //   author: "লেখকের নাম",
+        //   price: 350,        // বর্তমান মূল্য
+        //   oldPrice: 500,     // আগের মূল্য (auto discount% হিসাব হবে)
+        //   image: "https://your-image-link.jpg"
+        // }
         const BOOK_SOURCE = {
             "paradoxical-sajid": {
                 title: "প্যারাডক্সিক্যাল সাজিদ",
@@ -1974,7 +1982,92 @@
             "sample-1": { title: "নমুনা বই ১", author: "লেখক", price: 320, oldPrice: 400, image: "https://via.placeholder.com/320x420/1f1f1f/bdbdbd?text=Sample+Book+1" },
             "sample-2": { title: "নমুনা বই ২", author: "লেখক", price: 285, oldPrice: 350, image: "https://via.placeholder.com/320x420/1f1f1f/bdbdbd?text=Sample+Book+2" },
             "sample-3": { title: "নমুনা বই ৩", author: "লেখক", price: 199, oldPrice: 260, image: "https://via.placeholder.com/320x420/1f1f1f/bdbdbd?text=Sample+Book+3" },
-            "sample-4": { title: "নমুনা বই ৪", author: "লেখক", price: 150, oldPrice: 200, image: "https://via.placeholder.com/320x420/1f1f1f/bdbdbd?text=Sample+Book+4" }
+            "sample-4": { title: "নমুনা বই ৪", author: "লেখক", price: 150, oldPrice: 200, image: "https://via.placeholder.com/320x420/1f1f1f/bdbdbd?text=Sample+Book+4" },
+
+            "islami-quran-biggan": {
+                title: "কুরআন ও আধুনিক বিজ্ঞান",
+                author: "প্রফেসর মুহাম্মদ হামিদুর রহমান",
+                price: 390,
+                oldPrice: 520,
+                image: "https://via.placeholder.com/320x420/101820/ffd166?text=Islami+Book"
+            },
+            "novel-himu-pack": {
+                title: "হিমু সমগ্র (নির্বাচিত)",
+                author: "হুমায়ূন আহমেদ",
+                price: 480,
+                oldPrice: 650,
+                image: "https://via.placeholder.com/320x420/1f1f1f/f4a261?text=Novel+Book"
+            },
+            "admission-varsity-math": {
+                title: "ভার্সিটি ভর্তি ম্যাথ গাইড",
+                author: "রাকিব হাসান",
+                price: 310,
+                oldPrice: 420,
+                image: "https://via.placeholder.com/320x420/1f2a44/90caf9?text=Admission+Book"
+            },
+            "kids-fun-learn": {
+                title: "শিশুদের মজা করে শেখা",
+                author: "নাসরিন আক্তার",
+                price: 220,
+                oldPrice: 300,
+                image: "https://via.placeholder.com/320x420/263238/80cbc4?text=Kids+Book"
+            },
+            "self-atomic-habits-bn": {
+                title: "অ্যাটমিক হ্যাবিটস (বাংলা অনুবাদ)",
+                author: "জেমস ক্লিয়ার (অনুবাদ)",
+                price: 360,
+                oldPrice: 500,
+                image: "https://via.placeholder.com/320x420/2a1f3d/c5a3ff?text=Self+Help"
+            },
+            "thriller-nemesis": {
+                title: "নেমেসিস",
+                author: "মোহাম্মদ নাজিম উদ্দিন",
+                price: 340,
+                oldPrice: 450,
+                image: "https://via.placeholder.com/320x420/1a1a1a/ef5350?text=Thriller"
+            },
+            "wb-feluda": {
+                title: "ফেলুদা সমগ্র (১ম খণ্ড)",
+                author: "সত্যজিৎ রায়",
+                price: 420,
+                oldPrice: 560,
+                image: "https://via.placeholder.com/320x420/1d3557/a8dadc?text=West+Bengal"
+            },
+            "english-rich-dad": {
+                title: "Rich Dad Poor Dad",
+                author: "Robert T. Kiyosaki",
+                price: 430,
+                oldPrice: 590,
+                image: "https://via.placeholder.com/320x420/14213d/fca311?text=English+Book"
+            },
+            "story-short-stories": {
+                title: "নির্বাচিত ছোটগল্প",
+                author: "বিভিন্ন লেখক",
+                price: 260,
+                oldPrice: 350,
+                image: "https://via.placeholder.com/320x420/3a0f0f/f6bd60?text=Story+Book"
+            },
+            "freelance-upwork-roadmap": {
+                title: "Upwork Freelancing Roadmap",
+                author: "তামিম হাসান",
+                price: 380,
+                oldPrice: 520,
+                image: "https://via.placeholder.com/320x420/0b3d2e/84dcc6?text=Freelancing"
+            },
+            "sci-ai-future": {
+                title: "কৃত্রিম বুদ্ধিমত্তার ভবিষ্যৎ",
+                author: "ড. মাহবুব আলম",
+                price: 350,
+                oldPrice: 470,
+                image: "https://via.placeholder.com/320x420/001219/94d2bd?text=Science+Tech"
+            },
+            "hist-liberation-war": {
+                title: "বাংলাদেশের মুক্তিযুদ্ধের ইতিহাস",
+                author: "মুনতাসীর মামুন",
+                price: 410,
+                oldPrice: 550,
+                image: "https://via.placeholder.com/320x420/2b2d42/ffb4a2?text=History"
+            }
         };
 
         // HINT: Weekly row-তে বই দেখাতে নিচের key গুলো দিন (key অবশ্যই BOOK_SOURCE এ থাকতে হবে)।
@@ -2010,18 +2103,18 @@
         // Example: islam: ["paradoxical-sajid", "new-book-key", ...]
         // যদি কোনো slug এ list না দেন/খালি রাখেন, auto non-sample books দেখাবে।
         const DEFAULT_CATEGORY_BOOK_KEYS = {
-            islam: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            novel: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            admission: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            kids: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            self: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            thriller: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            wb: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            en: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            story: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            freelance: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            sci: ["sample-1", "sample-2", "sample-3", "sample-4"],
-            hist: ["sample-1", "sample-2", "sample-3", "sample-4"]
+            islam: ["islami-quran-biggan"],
+            novel: ["novel-himu-pack"],
+            admission: ["admission-varsity-math"],
+            kids: ["kids-fun-learn"],
+            self: ["self-atomic-habits-bn"],
+            thriller: ["thriller-nemesis"],
+            wb: ["wb-feluda"],
+            en: ["english-rich-dad"],
+            story: ["story-short-stories"],
+            freelance: ["freelance-upwork-roadmap"],
+            sci: ["sci-ai-future"],
+            hist: ["hist-liberation-war"]
         };
 
         let customCatalogData = {
