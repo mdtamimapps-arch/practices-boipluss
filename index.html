@@ -1416,12 +1416,13 @@
             "mehedi": "01988854671",
             "khairul": "01842480739",
             "walid": "01995351403",
-            "tamim": "01799584300"
+            "tamim": "01799584300",
+            "mdtamimapps@gmail.com": "01799584300"
         };
 
         /** সবাই ড্যাশবোর্ড দেখতে পারবে; নোটিশ এডিট শুধু এই ইউজার */
         const NOTICE_EDITOR_USER = "tamim";
-        const WEEKLY_EDITOR_USER = "tamim";
+        const WEEKLY_EDITOR_USERS = ["tamim", "mdtamimapps@gmail.com"];
         let currentAdminUser = null;
         let weeklyAuthToken = localStorage.getItem(WEEKLY_TOKEN_STORAGE_KEY) || "";
 
@@ -1500,12 +1501,17 @@
             return [...DEFAULT_NOTICES, ...custom];
         }
 
+        function isWeeklyEditorUser(username) {
+            const u = String(username || "").trim().toLowerCase();
+            return WEEKLY_EDITOR_USERS.includes(u);
+        }
+
         function canEditNotices() {
             return currentAdminUser === NOTICE_EDITOR_USER;
         }
 
         function canEditWeeklyBooks() {
-            return currentAdminUser === WEEKLY_EDITOR_USER && !!weeklyAuthToken;
+            return isWeeklyEditorUser(currentAdminUser) && !!weeklyAuthToken;
         }
 
         async function apiRequest(path, options) {
@@ -1562,8 +1568,8 @@
             if (!weeklyAuthToken) return false;
             try {
                 const me = await apiRequest("/auth/me");
-                if (me && me.username === WEEKLY_EDITOR_USER) {
-                    currentAdminUser = WEEKLY_EDITOR_USER;
+                if (me && isWeeklyEditorUser(me.username)) {
+                    currentAdminUser = String(me.username || "").trim().toLowerCase();
                     return true;
                 }
             } catch {
@@ -1688,7 +1694,7 @@
             if (adminData[userBox] && adminData[userBox] === passBox) {
                 closeLogin();
                 currentAdminUser = userBox;
-                if (userBox === WEEKLY_EDITOR_USER) {
+                if (isWeeklyEditorUser(userBox)) {
                     try {
                         const authData = await apiRequest("/auth/login", {
                             method: "POST",
@@ -1707,7 +1713,7 @@
                     await renderWeeklyAddedList();
                     const weeklySection = document.getElementById("weekly-ebook");
                     if (weeklySection) weeklySection.scrollIntoView({ behavior: "smooth", block: "start" });
-                    alert("Tamim login সফল। এখন Weekly বই add/remove করতে পারবেন।");
+                    alert("Admin login সফল। এখন Weekly বই add/remove করতে পারবেন।");
                 } else {
                     setWeeklyToken("");
                     mainWeb.style.display = "none";
