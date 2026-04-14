@@ -462,6 +462,7 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .dashboard-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; flex-wrap: wrap; gap: 16px; }
         .logout-btn { background: #ea4335; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; }
+        .weekly-manage-btn { background: #ff9800; color: #111; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: 700; }
 
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
         .dash-card { background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 25px; border-left: 4px solid #ff9800; }
@@ -1298,7 +1299,10 @@
                 <h1 style="color: #ff9800;">বই প্লাস অ্যাডমিন প্যানেল 🛡️</h1>
                 <p>তোমাকে স্বাগতম, <span id="logged-user" style="color: #fff; font-weight: bold;"></span>!</p>
             </div>
-            <button type="button" class="logout-btn" onclick="logout()">লগ আউট</button>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button type="button" id="dashboardWeeklyManageBtn" class="weekly-manage-btn" onclick="openWeeklyManager()" hidden>Weekly বই Manage</button>
+                <button type="button" class="logout-btn" onclick="logout()">লগ আউট</button>
+            </div>
         </div>
 
         <div class="dash-grid">
@@ -1718,6 +1722,19 @@
 
         function openLogin() { modal.style.display = "block"; }
         function closeLogin() { modal.style.display = "none"; }
+        async function openWeeklyManager() {
+            if (!canEditWeeklyBooks()) return;
+            dashBoard.style.display = "none";
+            mainWeb.style.display = "block";
+            applyWeeklyEditorUI();
+            await loadCustomCatalogData();
+            refreshCategoryTargetOptions();
+            await populateWeeklyRow();
+            populateCategoryRows();
+            await renderWeeklyAddedList();
+            const weeklySection = document.getElementById("weekly-ebook");
+            if (weeklySection) weeklySection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
 
         async function handleLogin(e) {
             e.preventDefault();
@@ -1727,27 +1744,26 @@
             if (adminData[userBox] && adminData[userBox] === passBox) {
                 closeLogin();
                 currentAdminUser = userBox;
+                setWeeklyToken("");
+                mainWeb.style.display = "none";
+                dashBoard.style.display = "block";
+                document.getElementById("logged-user").innerText = userBox.toUpperCase();
+                const weeklyBtn = document.getElementById("dashboardWeeklyManageBtn");
+                if (weeklyBtn) weeklyBtn.hidden = !isWeeklyEditorUser(userBox);
+                window.scrollTo(0, 0);
+                applyNoticeEditorUI();
+                renderNotices();
+                applyWeeklyEditorUI();
                 if (isWeeklyEditorUser(userBox)) {
-                    setWeeklyToken("");
-                    dashBoard.style.display = "none";
-                    mainWeb.style.display = "block";
-                    applyWeeklyEditorUI();
-                    await loadCustomCatalogData();
-                    refreshCategoryTargetOptions();
-                    await populateWeeklyRow();
-                    populateCategoryRows();
-                    await renderWeeklyAddedList();
-                    const weeklySection = document.getElementById("weekly-ebook");
-                    if (weeklySection) weeklySection.scrollIntoView({ behavior: "smooth", block: "start" });
-                    alert("Admin login সফল। এখন Weekly বই add/remove করতে পারবেন।");
-                } else {
-                    setWeeklyToken("");
-                    mainWeb.style.display = "none";
-                    dashBoard.style.display = "block";
-                    document.getElementById("logged-user").innerText = userBox.toUpperCase();
-                    window.scrollTo(0, 0);
-                    applyNoticeEditorUI();
-                    renderNotices();
+                    loadCustomCatalogData().then(function () {
+                        refreshCategoryTargetOptions();
+                        return populateWeeklyRow();
+                    }).then(function () {
+                        populateCategoryRows();
+                        return renderWeeklyAddedList();
+                    }).catch(function () {
+                        // Dashboard flow should stay responsive even if data sync fails.
+                    });
                 }
             } else {
                 alert("ভুল নাম বা পাসওয়ার্ড! মামুর বেটা কি দিয়েছিস 😁😀");
@@ -1759,6 +1775,8 @@
             setWeeklyToken("");
             dashBoard.style.display = "none";
             mainWeb.style.display = "block";
+            const weeklyBtn = document.getElementById("dashboardWeeklyManageBtn");
+            if (weeklyBtn) weeklyBtn.hidden = true;
             applyWeeklyEditorUI();
             renderWeeklyAddedList();
             alert("লগ আউট সফল।");
