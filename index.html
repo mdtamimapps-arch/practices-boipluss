@@ -236,6 +236,17 @@
             display: flex; gap: 16px; overflow-x: auto; padding-bottom: 10px; scroll-snap-type: x mandatory;
         }
         .horizontal-scroll .product-card { min-width: 200px; flex-shrink: 0; scroll-snap-align: start; }
+        .empty-category-message {
+            min-width: 240px;
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+            color: #ddd;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            flex: 0 0 auto;
+        }
         .mini-book-card {
             min-width: 220px !important;
             border-radius: 20px;
@@ -297,6 +308,45 @@
             font-size: 0.85rem;
             line-height: 1.45;
             margin-bottom: 10px;
+        }
+        .academic-info-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+        .academic-info-box {
+            flex: 1 1 calc(33.333% - 12px);
+            min-width: 220px;
+            padding: 18px 16px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(255, 0, 128, 0.14), rgba(0, 136, 255, 0.14));
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+        }
+        .academic-info-box::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.14), transparent 34%),
+                        radial-gradient(circle at bottom right, rgba(0, 255, 238, 0.12), transparent 28%);
+            pointer-events: none;
+        }
+        .academic-info-box span {
+            position: relative;
+            display: block;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            font-weight: 600;
+            color: #f6f6ff;
+            text-shadow: 0 1px 10px rgba(0, 0, 0, 0.25);
+        }
+        .academic-info-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.24);
         }
         .mini-book-card .mini-price {
             margin-top: 10px;
@@ -2152,13 +2202,26 @@
         // HINT: নতুন ক্যাটাগরি রো যোগ করতে নিচে নতুন object দিন: { title: "ক্যাটাগরি নাম", slug: "unique-slug" }
         const DEFAULT_CATEGORY_ROW_DEFS = [
             { title: "ইসলামি বই", slug: "islam" },
+            { title: "প্রথম - অষ্টম শ্রেণির অনুশীলনমূলক বই", slug: "academic-primary-practice" },
+            { title: "প্রথম - অষ্টম শ্রেণির ব্যাকরণ বই", slug: "academic-primary-grammar" },
+            { title: "নবম-দশম শ্রেণির অনুশীলনমূলক বই", slug: "academic-ssc-practice" },
+            { title: "নবম-দশম শ্রেণির বাংলা ও ইংরেজি ব্যাকরণ (এসএসসি ২০২৭)", slug: "academic-ssc-grammar" },
+            { title: "মাদরাসা নবম-দশম শ্রেণির অনুশীলনমূলক বই (দাখিল ২০২৬ ও ২০২৭)", slug: "academic-madrasa-practice" },
+            { title: "দশম শ্রেণির অনুশীলনমূলক বই (এসএসসি ২০২৬)", slug: "academic-ssc-10th-practice" },
+            { title: "এসএসসি টেস্ট পেপারস মেইড ইজি (এসএসসি ২০২৬)", slug: "academic-ssc-test-paper" },
+            { title: "এইচএসসি বিএমটি পাঠ্যবই", slug: "academic-hsc-bmt-text" },
+            { title: "এইচএসসি বিএমটি অনুশীলনমূলক বই", slug: "academic-hsc-bmt-practice" },
+            { title: "একাদশ-দ্বাদশ শ্রেণির পাঠ্যবই (HSC 2026 & 2027)", slug: "academic-hsc-text" },
+            { title: "একাদশ-দ্বাদশ শ্রেণির অনুশীলনমূলক বই (HSC 2026 & 2027)", slug: "academic-hsc-practice" },
+            { title: "আলিম পাঠ্যবই (আলিম ২০২৬ ও ২০২৭)", slug: "academic-alim-text" },
+            { title: "আলিম অনুশীলনমূলক বই (আলিম ২০২৬ ও ২০২৭)", slug: "academic-alim-practice" },
             { title: "আর কি দেওয়া যায়", slug: "ভাবো ভাবো" },
             { title: "উপন্যাস", slug: "novel" },
             { title: "ভর্তি ও প্রস্তুতি পরীক্ষা", slug: "admission" },
             { title: "শিশু-কিশোর বই", slug: "kids", sectionId: "kids" },
             { title: "আত্ম-উন্নয়ন ও মেডিটেশন", slug: "self" },
             { title: "রহস্য ও অ্যাডভেঞ্চার", slug: "thriller" },
-            { title: "পশ্চিমবঙ্গের বই", slug: "wb" },
+            { title: "পশ्चिमবঙ্গের বই", slug: "wb" },
             { title: "ইংরেজি ভাষার বই", slug: "en" },
             { title: "গল্প", slug: "story" },
             { title: "ফ্রিল্যান্সিং ও আউটসোর্সিং", slug: "freelance" },
@@ -2169,7 +2232,7 @@
         // HINT: প্রতিটি category row-তে কোন বই দেখাবেন সেটা slug ধরে এখানে key list দিয়ে দিন।
         // Example: islam: ["paradoxical-sajid", "new-book-key", ...]
         // যদি BOOK_SOURCE এর বইয়ের metadata এ category / categories দেওয়া থাকে, সেগুলোও auto ওই row-এ দেখানো হবে।
-        // যদি কোনো slug এ list না দেন/খালি রাখেন, auto non-sample books দেখাবে।
+        // যদি কোনো slug এ list না দেন/খালি রাখেন, শুধু কাস্টম-বইগুলোই দেখাবে।
         const DEFAULT_CATEGORY_BOOK_KEYS = {
             islam: ["islami-quran-biggan"],
             novel: ["novel-himu-pack"],
@@ -2557,12 +2620,23 @@
                 const finalKeys = (keys && keys.length) ? keys : autoKeys;
                 const baseCards = resolveBooksFromKeys(finalKeys);
                 const customCards = customCatalogData.categoryCustomBooks[def.slug] || [];
-                const cards = baseCards.concat(customCards).map(function (item) {
+                let cards = baseCards.concat(customCards).map(function (item) {
                     return buildMiniCard(item);
                 }).join("");
+
+                let extraInfo = "";
+                if (def.slug === "Academic") {
+                    extraInfo = '<div class="academic-info-row">' +
+                        ACADEMIC_CATEGORY_INFO_BOXES.map(function (text) {
+                            return '<div class="academic-info-box"><span>' + escapeHtml(text) + '</span></div>';
+                        }).join("") +
+                        '</div>';
+                }
+
                 return (
                     '<section class="browse-section" id="' + sid + '">' +
                     '<div class="browse-head"><h3>' + def.title + '</h3><a href="#' + sid + '" class="view-all">View All →</a></div>' +
+                    extraInfo +
                     '<div class="horizontal-scroll">' + cards + "</div></section>"
                 );
             }).join("");
